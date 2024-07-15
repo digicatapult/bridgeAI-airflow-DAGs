@@ -1,4 +1,5 @@
-"""
+"""Model training Airflow DAG for Kubernetes.
+
 To create a docker registry secret `DOCKER_REG_SECRET`;
 `
 kubectl create secret docker-registry docker-registry-secret \
@@ -58,19 +59,23 @@ If using a KIND cluster, to mount a host path to the model training container;
 import os
 
 from airflow.decorators import dag
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
-MLFLOW_TRACKING_URI = "http://host.docker.internal:5000"
-DATA_PATH = "/app/artefacts/HousingData.csv"
-DOCKER_REG_SECRET = "docker-registry-secret"
-NAMESPACE = "bridgeai"
-BASE_IMAGE = "renjithdigicat/bridgeai-regression:0.1"
-CONFIG_MAP = "training-config"
 
-# Set KUBECONFIG as env variable
-KUBECONFIG = os.getenv("KUBECONFIG")
+# Env variables
+# TODO: remove the defaults
+DATA_PATH = os.getenv("DATA_PATH", "/app/artefacts/HousingData.csv")
+MLFLOW_TRACKING_URI = os.getenv(
+    "MLFLOW_TRACKING_URI", "http://host.docker.internal:5000"
+)
+DOCKER_REG_SECRET = os.getenv("DOCKER_REG_SECRET", "docker-registry-secret")
+NAMESPACE = os.getenv("NAMESPACE", "bridgeai")
+BASE_IMAGE = os.getenv("BASE_IMAGE", "renjithdigicat/bridgeai-regression:0.1")
+CONFIG_MAP = os.getenv("CONFIG_MAP", "training-config")
+KUBECONFIG = os.getenv("KUBECONFIG", "~/.kube/config")
 
 
 @dag(schedule=None, catchup=False)
