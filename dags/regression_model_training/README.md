@@ -1,4 +1,4 @@
-# bridgeAI-airflow-DAGs
+# Regression model training DAG
 
 # How to:
 1. Install the dependencies in the container where Airflow is running\
