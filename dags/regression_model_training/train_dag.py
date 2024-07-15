@@ -1,69 +1,11 @@
-"""Model training Airflow DAG for Kubernetes.
-
-To create a docker registry secret `DOCKER_REG_SECRET`;
-`
-kubectl create secret docker-registry docker-registry-secret \
-  --docker-username=<docker-username> \
-  --docker-password=<docker-password> \
-  --docker-email=<docker-email> \
-  --docker-server=<docker-server> \
-  --namespace=bridgeai
-`
-To create a configmap `CONFIG_MAP`,
-1. `kubectl create configmap training-config \
-        --from-file=config.yaml --namespace=bridgeai`
-    The current config.yaml file is directly taken form the
-    `bridgeAI-regression-model-training` repo
-to verify the config,
-2. `kubectl describe configmap training-config --namespace=bridgeai`
-
-
-If using a KIND cluster, to mount a host path to the model training container;
-1. Mount the host local path to the kind cluster
-    a) Create a kind-config.yaml file with the following content
-        ```
-        kind: Cluster
-        apiVersion: kind.x-k8s.io/v1alpha4
-        nodes:
-          - role: control-plane
-            extraMounts:
-              - hostPath: /host/local/directory/tobe/mounted
-                containerPath: /mnt/data  # path name for the cluster
-        ```
-    b) Create a kind cluster with the created config
-        `kind create cluster --name bridgeai --config kind-config.yaml`
-2. Mount the cluster mount point path to the container
-    a) create volume
-        ```
-        volumes=[
-            k8s.V1Volume(
-                name="host-data-volume",
-                host_path=k8s.V1HostPathVolumeSource(
-                    path="/mnt/data",
-                    type="Directory"
-                )
-            ]
-        ```
-    b)  use the volume mount
-        ```
-        volume_mounts=[
-            k8s.V1VolumeMount(
-                name="host-data-volume",
-                mount_path="/app/artefacts",
-                read_only=False,
-                )
-            ]
-        ```
-"""
+"""Model training Airflow DAG for Kubernetes."""
 
 import os
 
 from airflow.decorators import dag
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperator,
-)
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
+    KubernetesPodOperator
 from kubernetes.client import models as k8s
-
 
 # Env variables
 # TODO: remove the defaults
