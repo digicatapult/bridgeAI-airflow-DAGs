@@ -17,7 +17,7 @@ DOCKER_REG_SECRET = os.getenv("DOCKER_REG_SECRET", "docker-registry-secret")
 NAMESPACE = os.getenv("NAMESPACE", "bridgeai")
 BASE_IMAGE = os.getenv("BASE_IMAGE", "renjithdigicat/bridgeai-regression:0.1")
 CONFIG_MAP = os.getenv("CONFIG_MAP", "training-config")
-KUBECONFIG = os.getenv("KUBECONFIG", "~/.kube/config")
+# KUBECONFIG = os.getenv("KUBECONFIG", "~/.kube/config")
 
 
 @dag(schedule=None, catchup=False)
@@ -64,7 +64,7 @@ def model_training_dag():
         ],
         is_delete_operator_pod=True,
         get_logs=True,
-        in_cluster=False,  # If Airflow is running in cluster - set to True
+        in_cluster=True,  # If Airflow is running in cluster - set to True
         config_file=KUBECONFIG,
     )
 
