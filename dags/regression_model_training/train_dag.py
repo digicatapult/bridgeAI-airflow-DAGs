@@ -24,11 +24,11 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "1",
     "t",
 )
-kubeconfig = (
-    Variable.get("kubeconfig", default_var="~/.kube/config")
-    if in_cluster
-    else None
-)
+# kubeconfig = (
+#     Variable.get("kubeconfig", default_var="~/.kube/config")
+#     if in_cluster
+#     else None
+# )
 
 
 @dag(schedule=None, catchup=False)
@@ -69,7 +69,7 @@ def model_training_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
-        config_file=kubeconfig,
+        # config_file=kubeconfig,
     )
 
     # Registering the task - Define the task dependencies here
