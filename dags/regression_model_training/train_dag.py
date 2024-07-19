@@ -20,8 +20,8 @@ NAMESPACE = os.getenv("NAMESPACE")
 BASE_IMAGE = os.getenv("BASE_IMAGE")
 CONFIG_MAP = os.getenv("CONFIG_MAP")
 CONNECTION_ID = os.getenv("CONNECTION_ID")
-KUBECONFIG = os.getenv("KUBECONFIG", "~/.kube/config")
 IN_CLUSTER = os.getenv("IN_CLUSTER", "False").lower() in ("true", "1", "t")
+KUBECONFIG = os.getenv("KUBECONFIG", "~/.kube/config") if IN_CLUSTER else None
 
 
 @dag(schedule=None, catchup=False)
