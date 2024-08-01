@@ -10,7 +10,7 @@ from kubernetes.client import models as k8s
 data_url = "https://raw.githubusercontent.com/renjith-digicat/random_file_shares/main/HousingData.csv"  # Variable.get("data_path")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
-base_image = "renjithdigicat/experiments:1.17"  # Variable.get("base_image_data_ingestion")
+base_image = "renjithdigicat/experiments:1.18"  # Variable.get("base_image_data_ingestion")
 # base_image = Variable.get("base_image_model_training")
 
 config_map = Variable.get("data_ingestion_configmap")
@@ -153,10 +153,10 @@ def data_ingestion_dag():
         # env_vars={
         #     "CONFIG_PATH": "/config/config.yaml",
         #     "LOG_LEVEL": log_level,
-        #     "GIT_USERNAME": k8s.V1EnvVarSource(
+        #     "GITHUB_USERNAME": k8s.V1EnvVarSource(
         #         secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
         #                                                key="username")),
-        #     "GIT_PASSWORD": k8s.V1EnvVarSource(
+        #     "GITHUB_PASSWORD": k8s.V1EnvVarSource(
         #         secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
         #                                                key="password"))
         # },
