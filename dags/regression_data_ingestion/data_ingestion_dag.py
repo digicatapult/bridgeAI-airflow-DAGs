@@ -48,11 +48,11 @@ pvc_volume_mount_from_repo = k8s.V1VolumeMount(
 )
 
 config_volumes = k8s.V1Volume(
-        name="data-ingest-config-volume",
+        name="config-volume",
         config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
     )
 config_volume_mounts = k8s.V1VolumeMount(
-        name="data-ingest-config-volume",
+        name="config-volume",
         mount_path="/config",
         read_only=True,
     )
@@ -76,7 +76,7 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
     )
@@ -95,7 +95,7 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
     )
@@ -114,7 +114,7 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
     )
