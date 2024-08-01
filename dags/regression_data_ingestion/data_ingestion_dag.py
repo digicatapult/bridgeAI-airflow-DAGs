@@ -62,9 +62,22 @@ config_volume_mounts = k8s.V1VolumeMount(
 secret = k8s.V1SecretEnvSource(name="github-auth")
 
 # Define the environment variables to read the username and password
+
 env_vars = [
-    k8s.V1EnvVar(name="GIT_USERNAME", value_from=k8s.V1EnvVarSource(secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="username"))),
-    k8s.V1EnvVar(name="GIT_PASSWORD", value_from=k8s.V1EnvVarSource(secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="password")))
+    k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
+    k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
+    k8s.V1EnvVar(
+        name="GITHUB_USERNAME",
+        value_from=k8s.V1EnvVarSource(
+            secret_key_ref=k8s.V1SecretKeySelector(name='github-auth', key='username')
+        )
+    ),
+    k8s.V1EnvVar(
+        name="GITHUB_PASSWORD",
+        value_from=k8s.V1EnvVarSource(
+            secret_key_ref=k8s.V1SecretKeySelector(name='github-auth', key='password')
+        )
+    ),
 ]
 
 
@@ -86,7 +99,7 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
-        is_delete_operator_pod=False,
+        is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
     )
@@ -105,7 +118,7 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
-        is_delete_operator_pod=False,
+        is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
     )
@@ -124,7 +137,7 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
-        is_delete_operator_pod=False,
+        is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
     )
@@ -137,16 +150,17 @@ def data_ingestion_dag():
         name="regression-data-push",
         cmds=["poetry", "run", "python", "src/data_push.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
-        env_vars={
-            "CONFIG_PATH": "/config/config.yaml",
-            "LOG_LEVEL": log_level,
-            "GIT_USERNAME": k8s.V1EnvVarSource(
-                secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
-                                                       key="username")),
-            "GIT_PASSWORD": k8s.V1EnvVarSource(
-                secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
-                                                       key="password"))
-        },
+        # env_vars={
+        #     "CONFIG_PATH": "/config/config.yaml",
+        #     "LOG_LEVEL": log_level,
+        #     "GIT_USERNAME": k8s.V1EnvVarSource(
+        #         secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
+        #                                                key="username")),
+        #     "GIT_PASSWORD": k8s.V1EnvVarSource(
+        #         secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
+        #                                                key="password"))
+        # },
+        env_vars=env_vars,
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount_from_repo, config_volume_mounts],
         is_delete_operator_pod=False,
