@@ -58,6 +58,15 @@ config_volume_mounts = k8s.V1VolumeMount(
         read_only=True,
     )
 
+# Define the github secret as environment variables
+secret = k8s.V1SecretEnvSource(name="github-auth")
+
+# Define the environment variables to read the username and password
+env_vars = [
+    k8s.V1EnvVar(name="GIT_USERNAME", value_from=k8s.V1EnvVarSource(secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="username"))),
+    k8s.V1EnvVar(name="GIT_PASSWORD", value_from=k8s.V1EnvVarSource(secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="password")))
+]
+
 
 @dag(schedule=None, catchup=False)
 def data_ingestion_dag():
@@ -131,6 +140,12 @@ def data_ingestion_dag():
         env_vars={
             "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
+            "GIT_USERNAME": k8s.V1EnvVarSource(
+                secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
+                                                       key="username")),
+            "GIT_PASSWORD": k8s.V1EnvVarSource(
+                secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
+                                                       key="password"))
         },
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount_from_repo, config_volume_mounts],
