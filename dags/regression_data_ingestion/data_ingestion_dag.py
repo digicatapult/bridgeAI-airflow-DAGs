@@ -10,7 +10,8 @@ from kubernetes.client import models as k8s
 data_url = "https://raw.githubusercontent.com/renjith-digicat/random_file_shares/main/HousingData.csv"  # Variable.get("data_path")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
-base_image = "renjithdigicat/experiments:1.14"  # Variable.get("base_image_data_ingestion")
+# base_image = "renjithdigicat/experiments:1.14"  # Variable.get("base_image_data_ingestion")
+base_image = Variable.get("base_image_model_training")
 
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
@@ -68,7 +69,7 @@ def data_ingestion_dag():
         task_id="data_collection_task",
         name="regression-data-collect",
         cmds=["poetry", "run", "python", "src/data_gathering.py"],
-        # image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars={
             "DATA_URL": data_url,
             "CONFIG_PATH": "/config/config.yaml",
