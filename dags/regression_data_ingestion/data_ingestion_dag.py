@@ -12,7 +12,7 @@ docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = "renjithdigicat/experiments:1.14"  # Variable.get("base_image_data_ingestion")
 
-config_map = Variable.get("regression_model_data_ingestion_configmap")
+config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
 log_level = "INFO"  # Variable.get("log_level", default_var="INFO")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (

@@ -16,7 +16,7 @@ mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_model_training")
-config_map = Variable.get("regression_model_training_configmap")
+config_map = Variable.get("model_training_configmap")
 connection_id = Variable.get("connection_id")
 log_level = Variable.get("log_level", default_var="INFO")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
