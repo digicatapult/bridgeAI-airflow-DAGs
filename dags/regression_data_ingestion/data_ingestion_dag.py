@@ -71,10 +71,10 @@ def data_ingestion_dag():
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars={
             "DATA_URL": data_url,
-            "CONFIG_PATH": "./config.yaml",
+            "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
-        volumes=[pvc_volume],
+        volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount, config_volume_mounts],
         is_delete_operator_pod=False,
         get_logs=True,
@@ -90,7 +90,7 @@ def data_ingestion_dag():
         cmds=["poetry", "run", "python", "src/data_cleansing.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars={
-            "CONFIG_PATH": "./config.yaml",
+            "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
         volumes=[pvc_volume, config_volumes],
@@ -109,7 +109,7 @@ def data_ingestion_dag():
         cmds=["poetry", "run", "python", "src/data_splitting.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars={
-            "CONFIG_PATH": "./config.yaml",
+            "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
         volumes=[pvc_volume, config_volumes],
@@ -128,7 +128,7 @@ def data_ingestion_dag():
         cmds=["poetry", "run", "python", "src/data_push.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars={
-            "CONFIG_PATH": "./config.yaml",
+            "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
         volumes=[pvc_volume, config_volumes],
