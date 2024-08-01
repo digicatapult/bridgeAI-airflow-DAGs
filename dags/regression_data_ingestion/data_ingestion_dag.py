@@ -68,7 +68,7 @@ def data_ingestion_dag():
         task_id="data_collection_task",
         name="regression-data-collect",
         cmds=["poetry", "run", "python", "src/data_gathering.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        # image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars={
             "DATA_URL": data_url,
             "CONFIG_PATH": "/config/config.yaml",
