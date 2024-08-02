@@ -10,19 +10,16 @@ from kubernetes.client import models as k8s
 data_url = "https://raw.githubusercontent.com/renjith-digicat/random_file_shares/main/HousingData.csv"  # Variable.get("data_path")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
-base_image = "renjithdigicat/experiments:1.19"  # Variable.get("base_image_data_ingestion")
-# base_image = Variable.get("base_image_model_training")
+base_image = "renjithdigicat/experiments:1.20"  # Variable.get("base_image_data_ingestion")
 
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
-log_level = "INFO"  # Variable.get("log_level", default_var="INFO")
+log_level = Variable.get("log_level", default_var="INFO")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "true",
     "1",
     "t",
 )
-
-# kubeconfig = "~/.kube/config"
 
 # Define the volume and volume mount using k8s models
 pvc_volume = k8s.V1Volume(
@@ -150,20 +147,10 @@ def data_ingestion_dag():
         name="regression-data-push",
         cmds=["poetry", "run", "python", "src/data_push.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
-        # env_vars={
-        #     "CONFIG_PATH": "/config/config.yaml",
-        #     "LOG_LEVEL": log_level,
-        #     "GITHUB_USERNAME": k8s.V1EnvVarSource(
-        #         secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
-        #                                                key="username")),
-        #     "GITHUB_PASSWORD": k8s.V1EnvVarSource(
-        #         secret_key_ref=k8s.V1SecretKeySelector(name="github-auth",
-        #                                                key="password"))
-        # },
         env_vars=env_vars,
         volumes=[pvc_volume, config_volumes],
         volume_mounts=[pvc_volume_mount_from_repo, config_volume_mounts],
-        is_delete_operator_pod=False,
+        is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
     )
