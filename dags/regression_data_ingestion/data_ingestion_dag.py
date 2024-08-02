@@ -10,7 +10,7 @@ from kubernetes.client import models as k8s
 data_url = "https://raw.githubusercontent.com/renjith-digicat/random_file_shares/main/HousingData.csv"  # Variable.get("data_path")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
-base_image = "renjithdigicat/experiments:1.18"  # Variable.get("base_image_data_ingestion")
+base_image = "renjithdigicat/experiments:1.19"  # Variable.get("base_image_data_ingestion")
 # base_image = Variable.get("base_image_model_training")
 
 config_map = Variable.get("data_ingestion_configmap")
