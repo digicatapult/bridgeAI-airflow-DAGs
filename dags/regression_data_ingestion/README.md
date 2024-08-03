@@ -15,7 +15,6 @@
 | config_map          | None             | Name of the configmap containing the data ingestion config                                                                                                                      |
 | connection_id       | None             | Kubernetes connection id                                                                                                                                                        |
 | in_cluster          | False            | run kubernetes client with in_cluster configuration                                                                                                                             |
-| kubeconfig          | `~/.kube/config` | Path to the Kubeconfig file - [Reference](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/operators.html#id3). Only used if IN_CLUSTER is False |
 
 3. Add the absolute path to `./dags` directory of this repo to the Airflow dags path using one of the method\
     a. Using the `airflow.cfg` file - Update the `dags_folder`

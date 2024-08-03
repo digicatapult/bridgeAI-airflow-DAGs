@@ -8,7 +8,7 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from kubernetes.client import models as k8s
 
 # Env variables
-data_url = Variable.get("data_path")
+data_url = Variable.get("data_url")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_data_ingestion")
