@@ -2,15 +2,16 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
 # Env variables
-data_url = "https://raw.githubusercontent.com/renjith-digicat/random_file_shares/main/HousingData.csv"  # Variable.get("data_path")
+data_url = Variable.get("data_path")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
-base_image = "renjithdigicat/experiments:1.20"  # Variable.get("base_image_data_ingestion")
+base_image = Variable.get("base_image_data_ingestion")
 
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
@@ -46,14 +47,14 @@ pvc_volume_mount_from_repo = k8s.V1VolumeMount(
 )
 
 config_volumes = k8s.V1Volume(
-        name="config-volume",
-        config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-    )
+    name="config-volume",
+    config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
+)
 config_volume_mounts = k8s.V1VolumeMount(
-        name="config-volume",
-        mount_path="/config",
-        read_only=True,
-    )
+    name="config-volume",
+    mount_path="/config",
+    read_only=True,
+)
 
 # Define the github secret as environment variables
 secret = k8s.V1SecretEnvSource(name="github-auth")
@@ -66,14 +67,18 @@ env_vars = [
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
-            secret_key_ref=k8s.V1SecretKeySelector(name='github-auth', key='username')
-        )
+            secret_key_ref=k8s.V1SecretKeySelector(
+                name="github-auth", key="username"
+            )
+        ),
     ),
     k8s.V1EnvVar(
         name="GITHUB_PASSWORD",
         value_from=k8s.V1EnvVarSource(
-            secret_key_ref=k8s.V1SecretKeySelector(name='github-auth', key='password')
-        )
+            secret_key_ref=k8s.V1SecretKeySelector(
+                name="github-auth", key="password"
+            )
+        ),
     ),
 ]
 
