@@ -1,13 +1,12 @@
-"""Model training Airflow DAG for Kubernetes."""
+"""Regression model data ingestion Airflow DAG for Kubernetes."""
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperator,
-)
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
+    KubernetesPodOperator
 from kubernetes.client import models as k8s
 
-# Env variables
+# Get Airflow Variables
 data_url = Variable.get("data_url")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
@@ -22,7 +21,7 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "t",
 )
 
-# Define the volume and volume mount using k8s models
+# Define PVC
 pvc_volume = k8s.V1Volume(
     name="data-ingestion-volume",
     persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
@@ -30,6 +29,7 @@ pvc_volume = k8s.V1Volume(
     ),
 )
 
+# Mount PVC
 pvc_volume_mount = k8s.V1VolumeMount(
     name="data-ingestion-volume",
     mount_path="/app/artefacts",
@@ -37,8 +37,7 @@ pvc_volume_mount = k8s.V1VolumeMount(
     read_only=False,
 )
 
-# Same path referencing as a different one from within the repo
-# TODO: confirm if this is the right way
+# Mount PVC from a different location for another pod
 pvc_volume_mount_from_repo = k8s.V1VolumeMount(
     name="data-ingestion-volume",
     mount_path="/app/local_repo/artefacts",
@@ -46,10 +45,12 @@ pvc_volume_mount_from_repo = k8s.V1VolumeMount(
     read_only=False,
 )
 
+# Define config volume
 config_volumes = k8s.V1Volume(
     name="config-volume",
     config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
 )
+# Mount config volume
 config_volume_mounts = k8s.V1VolumeMount(
     name="config-volume",
     mount_path="/config",
@@ -67,17 +68,13 @@ env_vars = [
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
-            secret_key_ref=k8s.V1SecretKeySelector(
-                name="github-auth", key="username"
-            )
+            secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="username")
         ),
     ),
     k8s.V1EnvVar(
         name="GITHUB_PASSWORD",
         value_from=k8s.V1EnvVarSource(
-            secret_key_ref=k8s.V1SecretKeySelector(
-                name="github-auth", key="password"
-            )
+            secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="password")
         ),
     ),
 ]
@@ -160,7 +157,7 @@ def data_ingestion_dag():
         in_cluster=in_cluster,
     )
 
-    # Registering the task - Define the task dependencies here
+    # Registering the task - task dependencies
     data_collect_pod >> data_clean_pod >> data_split_pod >> data_push_pod
 
 
