@@ -20,12 +20,22 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "1",
     "t",
 )
+github_secret = Variable.get("github_secret", default_var="github-auth")
+github_secret_username_key = Variable.get(
+    "github_secret_username_key", default_var="username"
+)
+github_secret_password_key = Variable.get(
+    "github_secret_password_key", default_var="password"
+)
+pvc_claim_name = Variable.get(
+    "data_ingestion_pvc", default_var="data-ingestion-pvc"
+)
 
 # Define PVC
 pvc_volume = k8s.V1Volume(
     name="data-ingestion-volume",
     persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
-        claim_name="data-ingestion-pvc"
+        claim_name=pvc_claim_name
     ),
 )
 
@@ -68,13 +78,17 @@ env_vars = [
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
-            secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="username")
+            secret_key_ref=k8s.V1SecretKeySelector(
+                name=github_secret, key=github_secret_username_key
+            )
         ),
     ),
     k8s.V1EnvVar(
         name="GITHUB_PASSWORD",
         value_from=k8s.V1EnvVarSource(
-            secret_key_ref=k8s.V1SecretKeySelector(name="github-auth", key="password")
+            secret_key_ref=k8s.V1SecretKeySelector(
+                name=github_secret, key=github_secret_password_key
+            )
         ),
     ),
 ]
