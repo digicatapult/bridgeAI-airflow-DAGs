@@ -2,9 +2,8 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperator,
-)
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
+    KubernetesPodOperator
 from kubernetes.client import models as k8s
 
 # Env variables
@@ -12,7 +11,6 @@ from kubernetes.client import models as k8s
 # TODO: probably change the use of `data_path` when dvc data versioning is
 available and pull the data directly from dvc remote.
 """
-data_path = Variable.get("data_path")
 mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
@@ -23,13 +21,38 @@ log_level = Variable.get("log_level", default_var="INFO")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "true",
     "1",
-    "t",
+    "t",)
+github_secret = Variable.get("github_secret", default_var="github-auth")
+github_secret_username_key = Variable.get(
+    "github_secret_username_key", default_var="username"
 )
-# kubeconfig = (
-#     Variable.get("kubeconfig", default_var="~/.kube/config")
-#     if in_cluster
-#     else None
-# )
+github_secret_password_key = Variable.get(
+    "github_secret_password_key", default_var="password"
+)
+
+
+env_vars = [
+    k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
+    k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
+    k8s.V1EnvVar(
+        name="GITHUB_USERNAME",
+        value_from=k8s.V1EnvVarSource(
+            secret_key_ref=k8s.V1SecretKeySelector(
+                name=github_secret, key=github_secret_username_key
+            )
+        ),
+    ),
+    k8s.V1EnvVar(
+        name="GITHUB_PASSWORD",
+        value_from=k8s.V1EnvVarSource(
+            secret_key_ref=k8s.V1SecretKeySelector(
+                name=github_secret, key=github_secret_password_key
+            )
+        ),
+    ),
+    k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
+    k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
+]
 
 
 @dag(schedule=None, catchup=False)
@@ -48,12 +71,7 @@ def model_training_dag():
         name="regression-model-training",
         cmds=["poetry", "run", "python", "src/main.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
-        env_vars={
-            "DATA_PATH": data_path,
-            "CONFIG_PATH": "/config/config.yaml",
-            "MLFLOW_TRACKING_URI": mlflow_tracking_uri,
-            "LOG_LEVEL": log_level,
-        },
+        env_vars=env_vars,
         volumes=[
             k8s.V1Volume(
                 name="config-volume",
