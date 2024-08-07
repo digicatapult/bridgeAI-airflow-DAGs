@@ -141,6 +141,7 @@ def model_training_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
+        do_xcom_push=True
     )
 
     evaluation_pod = KubernetesPodOperator(
@@ -149,7 +150,7 @@ def model_training_dag():
         image=base_image,
         task_id="model_evaluation",
         name="model-evaluation",
-        cmds=["poetry", "run", "python", "src/evaluate.py"],
+        cmds=["poetry", "run", "python", "src/evaluate.py", "--run_id", "{{ ti.xcom_pull(task_ids='model_training') }}"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
