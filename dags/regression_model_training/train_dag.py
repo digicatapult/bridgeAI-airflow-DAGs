@@ -149,7 +149,7 @@ def model_training_dag():
         image=base_image,
         task_id="model_evaluation",
         name="model-evaluation",
-        cmds=["poetry", "run", "python", "src/train.py"],
+        cmds=["poetry", "run", "python", "src/evaluate.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
