@@ -66,18 +66,14 @@ env_vars = [
 @dag(schedule=None, catchup=False)
 def model_training_dag():
     """Model training dag."""
-    # Define KubernetesPodOperator to run the training container
-    """
-    # TODO: Split this large task into 3 separate tasks
-    # preprocess >> train >> evaluate
-    """
-    training_pod = KubernetesPodOperator(
+    # Define KubernetesPodOperator to fetch the data from dvc
+    data_fetch_pod = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
         image=base_image,
-        task_id="regression_model_training_task",
-        name="regression-model-training",
-        cmds=["poetry", "run", "python", "src/main.py"],
+        task_id="data_fetch_from_dvc",
+        name="data-fetch-from-dvc",
+        cmds=["poetry", "run", "python", "src/fetch_data.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
         volumes=[
@@ -96,11 +92,91 @@ def model_training_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
-        # config_file=kubeconfig,
+    )
+
+    preprocess_pod = KubernetesPodOperator(
+        kubernetes_conn_id=connection_id,
+        namespace=namespace,
+        image=base_image,
+        task_id="preprocess_data",
+        name="preprocess-data",
+        cmds=["poetry", "run", "python", "src/preprocess.py"],
+        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        env_vars=env_vars,
+        volumes=[
+            k8s.V1Volume(
+                name="config-volume",
+                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
+            ),
+        ],
+        volume_mounts=[
+            k8s.V1VolumeMount(
+                name="config-volume",
+                mount_path="/config",
+                read_only=True,
+            ),
+        ],
+        is_delete_operator_pod=True,
+        get_logs=True,
+        in_cluster=in_cluster,
+    )
+
+    model_train_pod = KubernetesPodOperator(
+        kubernetes_conn_id=connection_id,
+        namespace=namespace,
+        image=base_image,
+        task_id="model_training",
+        name="model-training",
+        cmds=["poetry", "run", "python", "src/train.py"],
+        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        env_vars=env_vars,
+        volumes=[
+            k8s.V1Volume(
+                name="config-volume",
+                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
+            ),
+        ],
+        volume_mounts=[
+            k8s.V1VolumeMount(
+                name="config-volume",
+                mount_path="/config",
+                read_only=True,
+            ),
+        ],
+        is_delete_operator_pod=True,
+        get_logs=True,
+        in_cluster=in_cluster,
+    )
+
+    evaluation_pod = KubernetesPodOperator(
+        kubernetes_conn_id=connection_id,
+        namespace=namespace,
+        image=base_image,
+        task_id="model_evaluation",
+        name="model-evaluation",
+        cmds=["poetry", "run", "python", "src/train.py"],
+        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        env_vars=env_vars,
+        volumes=[
+            k8s.V1Volume(
+                name="config-volume",
+                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
+            ),
+        ],
+        volume_mounts=[
+            k8s.V1VolumeMount(
+                name="config-volume",
+                mount_path="/config",
+                read_only=True,
+            ),
+        ],
+        is_delete_operator_pod=True,
+        get_logs=True,
+        in_cluster=in_cluster,
     )
 
     # Registering the task - Define the task dependencies here
-    training_pod
+    data_fetch_pod >> preprocess_pod >> model_train_pod >> evaluation_pod
 
 
 # Instantiate the DAG
