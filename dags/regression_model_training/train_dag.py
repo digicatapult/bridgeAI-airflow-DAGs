@@ -33,7 +33,39 @@ github_secret_username_key = Variable.get(
 github_secret_password_key = Variable.get(
     "github_secret_password_key", default_var="password"
 )
+pvc_claim_name = Variable.get(
+    "model_training_pvc", default_var="model-training-pvc"
+)
 
+# Define PVC
+pvc_volume = k8s.V1Volume(
+    name="model-training-volume",
+    persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
+        claim_name=pvc_claim_name
+    ),
+)
+
+# Mount PVC
+pvc_volume_mount = k8s.V1VolumeMount(
+    name="model-training-volume",
+    mount_path="/app/artefacts",
+    sub_path=None,
+    read_only=False,
+)
+
+config_volume = [
+    k8s.V1Volume(
+        name="config-volume",
+        config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
+    ),
+]
+config_volume_mount = [
+    k8s.V1VolumeMount(
+        name="config-volume",
+        mount_path="/config",
+        read_only=True,
+    ),
+]
 
 env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
@@ -76,19 +108,8 @@ def model_training_dag():
         cmds=["poetry", "run", "python", "src/fetch_data.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
-        volumes=[
-            k8s.V1Volume(
-                name="config-volume",
-                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-            ),
-        ],
-        volume_mounts=[
-            k8s.V1VolumeMount(
-                name="config-volume",
-                mount_path="/config",
-                read_only=True,
-            ),
-        ],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
@@ -103,19 +124,8 @@ def model_training_dag():
         cmds=["poetry", "run", "python", "src/preprocess.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
-        volumes=[
-            k8s.V1Volume(
-                name="config-volume",
-                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-            ),
-        ],
-        volume_mounts=[
-            k8s.V1VolumeMount(
-                name="config-volume",
-                mount_path="/config",
-                read_only=True,
-            ),
-        ],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
@@ -130,19 +140,8 @@ def model_training_dag():
         cmds=["poetry", "run", "python", "src/train.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
-        volumes=[
-            k8s.V1Volume(
-                name="config-volume",
-                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-            ),
-        ],
-        volume_mounts=[
-            k8s.V1VolumeMount(
-                name="config-volume",
-                mount_path="/config",
-                read_only=True,
-            ),
-        ],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
@@ -157,19 +156,8 @@ def model_training_dag():
         cmds=["poetry", "run", "python", "src/train.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
-        volumes=[
-            k8s.V1Volume(
-                name="config-volume",
-                config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-            ),
-        ],
-        volume_mounts=[
-            k8s.V1VolumeMount(
-                name="config-volume",
-                mount_path="/config",
-                read_only=True,
-            ),
-        ],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,

@@ -58,12 +58,12 @@ pvc_volume_mount_from_repo = k8s.V1VolumeMount(
 )
 
 # Define config volume
-config_volumes = k8s.V1Volume(
+config_volume = k8s.V1Volume(
     name="config-volume",
     config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
 )
 # Mount config volume
-config_volume_mounts = k8s.V1VolumeMount(
+config_volume_mount = k8s.V1VolumeMount(
     name="config-volume",
     mount_path="/config",
     read_only=True,
@@ -115,8 +115,8 @@ def data_ingestion_dag():
             "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
-        volumes=[pvc_volume, config_volumes],
-        volume_mounts=[pvc_volume_mount, config_volume_mounts],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
@@ -134,8 +134,8 @@ def data_ingestion_dag():
             "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
-        volumes=[pvc_volume, config_volumes],
-        volume_mounts=[pvc_volume_mount, config_volume_mounts],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
@@ -153,8 +153,8 @@ def data_ingestion_dag():
             "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
         },
-        volumes=[pvc_volume, config_volumes],
-        volume_mounts=[pvc_volume_mount, config_volume_mounts],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
@@ -169,8 +169,8 @@ def data_ingestion_dag():
         cmds=["poetry", "run", "python", "src/data_push.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
-        volumes=[pvc_volume, config_volumes],
-        volume_mounts=[pvc_volume_mount_from_repo, config_volume_mounts],
+        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount_from_repo, config_volume_mount],
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
