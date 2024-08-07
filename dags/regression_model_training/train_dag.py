@@ -53,19 +53,15 @@ pvc_volume_mount = k8s.V1VolumeMount(
     read_only=False,
 )
 
-config_volume = [
-    k8s.V1Volume(
+config_volume = k8s.V1Volume(
         name="config-volume",
         config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-    ),
-]
-config_volume_mount = [
-    k8s.V1VolumeMount(
+    )
+config_volume_mount = k8s.V1VolumeMount(
         name="config-volume",
         mount_path="/config",
         read_only=True,
-    ),
-]
+    )
 
 env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
