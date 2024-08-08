@@ -160,11 +160,6 @@ def model_training_dag():
         in_cluster=in_cluster,
     )
 
-    # pull the XCom value that has been pushed by the KubernetesPodOperator
-    transformed_data_point = context["ti"].xcom_pull(
-        task_ids="transform", key="return_value"
-    )
-
     # Registering the task - Define the task dependencies here
     data_fetch_pod >> preprocess_pod >> model_train_pod >> evaluation_pod
 
