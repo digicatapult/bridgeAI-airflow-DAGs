@@ -2,8 +2,9 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
 # Get Airflow Variables

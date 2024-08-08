@@ -37,6 +37,8 @@
 
 4. Open the Airflow web UI and trigger the DAG with name `data_ingestion_dag`
 
+New data will be available in the specified repo's specified branch with a tag prefix `data-` followed by version.
+
 ---
 ## Notes:
 
