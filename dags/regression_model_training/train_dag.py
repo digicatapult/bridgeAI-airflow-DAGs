@@ -3,8 +3,9 @@
 from airflow.decorators import dag
 from airflow.models import Variable
 from airflow.operators.python import PythonOperator
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
 # Env variables
@@ -95,7 +96,9 @@ env_vars = [
 
 def extract_run_id(**kwargs):
     ti = kwargs["ti"]
-    run_id = ti.xcom_pull(task_ids="model_training", key="run_id")
+    run_id = ti.xcom_pull(task_ids="model_training", key="return_value")[
+        "run_id"
+    ]
     if run_id is None:
         raise ValueError("No run_id found in XCom for task 'model_training'")
     return run_id
