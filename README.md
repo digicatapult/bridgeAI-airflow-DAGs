@@ -36,3 +36,9 @@ kubectl get pvc
 12. Access the Airflow UI - http://localhost:3080/airflow
 13. You can update the airflow variable from the airflow UI; Admin -> Variables
 14. Open the DAG and trigger it. You can inspect the logs in the airflow UI as well as kubectl events.
+
+
+Some commands are;\
+`kubectl get pods` - to get list of pods in the default namespace\
+`kubectl events --watch` - to monitor the events from kubernetes\
+`kubectl log <pod>` - to get the logs from a specific pod\
