@@ -2,6 +2,7 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
+from airflow.operators.python import PythonOperator
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
     KubernetesPodOperator
 from kubernetes.client import models as k8s
@@ -25,7 +26,8 @@ log_level = Variable.get("log_level", default_var="INFO")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "true",
     "1",
-    "t",)
+    "t",
+)
 github_secret = Variable.get("github_secret", default_var="github-auth")
 github_secret_username_key = Variable.get(
     "github_secret_username_key", default_var="username"
@@ -54,14 +56,14 @@ pvc_volume_mount = k8s.V1VolumeMount(
 )
 
 config_volume = k8s.V1Volume(
-        name="config-volume",
-        config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
-    )
+    name="config-volume",
+    config_map=k8s.V1ConfigMapVolumeSource(name=config_map),
+)
 config_volume_mount = k8s.V1VolumeMount(
-        name="config-volume",
-        mount_path="/config",
-        read_only=True,
-    )
+    name="config-volume",
+    mount_path="/config",
+    read_only=True,
+)
 
 env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
@@ -89,6 +91,14 @@ env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
 ]
+
+
+def extract_run_id(**kwargs):
+    ti = kwargs["ti"]
+    run_id = ti.xcom_pull(task_ids="model_training", key="run_id")
+    if run_id is None:
+        raise ValueError("No run_id found in XCom for task 'model_training'")
+    return run_id
 
 
 @dag(schedule=None, catchup=False)
@@ -141,7 +151,13 @@ def model_training_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
-        do_xcom_push=True
+        do_xcom_push=True,
+    )
+
+    extract_run_id_task = PythonOperator(
+        task_id="extract_run_id",
+        python_callable=extract_run_id,
+        provide_context=True,
     )
 
     evaluation_pod = KubernetesPodOperator(
@@ -150,7 +166,14 @@ def model_training_dag():
         image=base_image,
         task_id="model_evaluation",
         name="model-evaluation",
-        cmds=["poetry", "run", "python", "src/evaluate.py", "--run_id", "{{ ti.xcom_pull(task_ids='model_training', key='run_id') }}"],
+        cmds=[
+            "poetry",
+            "run",
+            "python",
+            "src/evaluate.py",
+            "--run_id",
+            "{{ ti.xcom_pull(task_ids='extract_run_id') }}",
+        ],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
@@ -161,7 +184,13 @@ def model_training_dag():
     )
 
     # Registering the task - Define the task dependencies here
-    data_fetch_pod >> preprocess_pod >> model_train_pod >> evaluation_pod
+    (
+        data_fetch_pod
+        >> preprocess_pod
+        >> model_train_pod
+        >> extract_run_id_task
+        >> evaluation_pod
+    )
 
 
 # Instantiate the DAG
