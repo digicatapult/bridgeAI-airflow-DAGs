@@ -68,7 +68,8 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_REMOTE", value=dvc_remote),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
-    k8s.V1EnvVar(name="DATA_VERSION", value=data_version),
+    k8s.V1EnvVar(name="HISTORICAL_DATA_VERSION", value=historical_data_version),
+    k8s.V1EnvVar(name="NEW_DATA_VERSION", value=new_data_version),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
