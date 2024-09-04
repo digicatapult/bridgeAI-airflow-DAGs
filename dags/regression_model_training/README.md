@@ -6,17 +6,25 @@
     `pip install apache-airflow-providers-cncf-kubernetes`
 2. Set the following [Airflow variables](https://airflow.apache.org/docs/apache-airflow/stable/howto/variable.html). Refer to the [Notes](#notes) for details.
 
-| Variable            | Default Value    | Description                                                                                                                                                                     |
-|---------------------|------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| data_path           | None             | File path to the raw data CSV data used for training. You may need to mount the and ensure the Pod has access to it.                                                            |
-| mlflow_tracking_uri | None             | MLFlow tracking URI.                                                                                                                                                            |
-| namespace           | None             | Kubernetes cluster namespace                                                                                                                                                    |
-| base_image          | None             | Name of the model training image                                                                                                                                                |
-| docker_reg_secret   | None             | Name of the secret for the docker registry pull                                                                                                                                 |
-| config_map          | None             | Name of the configmap containing the model training config                                                                                                                      |
-| connection_id       | None             | Kubernetes connection id                                                                                                                                                        |
-| in_cluster          | False            | run kubernetes client with in_cluster configuration                                                                                                                             |
-| kubeconfig          | `~/.kube/config` | Path to the Kubeconfig file - [Reference](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/operators.html#id3). Only used if IN_CLUSTER is False |
+| Variable                   | Default Value             | Description                                                                                                                                                                     |
+|----------------------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| data_path                  | None                      | File path to the raw data CSV data used for training. You may need to mount the and ensure the Pod has access to it.                                                            |
+| mlflow_tracking_uri        | None                      | MLFlow tracking URI.                                                                                                                                                            |
+| namespace                  | None                      | Kubernetes cluster namespace                                                                                                                                                    |
+| base_image                 | None                      | Name of the model training image                                                                                                                                                |
+| docker_reg_secret          | None                      | Name of the secret for the docker registry pull                                                                                                                                 |
+| config_map                 | None                      | Name of the configmap containing the model training config                                                                                                                      |
+| connection_id              | None                      | Kubernetes connection id                                                                                                                                                        |
+| in_cluster                 | False                     | run kubernetes client with in_cluster configuration                                                                                                                             |
+| kubeconfig                 | `~/.kube/config`          | Path to the Kubeconfig file - [Reference](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/operators.html#id3). Only used if IN_CLUSTER is False |
+| dvc_remote                 | "s3://artifacts"          | dvc remote                                                                                                                                                                      |
+| dvc_remote_name            | "regression-model-remote" | name for dvc remote                                                                                                                                                             |
+| dvc_access_key_id          | `admin`                   | access key for dvc remote                                                                                                                                                       |
+| dvc_secret_access_key      | `password`                | secret access key for dvc remote                                                                                                                                                |
+| github_secret              | `github-auth`             | Name of the secret for git access                                                                                                                                               |
+| github_secret_username_key | `username`                | Key corresponding to the git username in the above github_secret                                                                                                                |
+| github_secret_password_key | `password`                | Key corresponding to the git password in the above github_secret                                                                                                                |
+
 
 3. Add the absolute path to `./dags` directory of this repo to the Airflow dags path using one of the method\
     a. Using the `airflow.cfg` file - Update the `dags_folder`

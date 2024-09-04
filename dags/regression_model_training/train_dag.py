@@ -9,10 +9,6 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
 from kubernetes.client import models as k8s
 
 # Env variables
-"""
-# TODO: probably change the use of `data_path` when dvc data versioning is
-available and pull the data directly from dvc remote.
-"""
 mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
@@ -20,7 +16,7 @@ base_image = Variable.get("base_image_model_training")
 dvc_remote = Variable.get("dvc_remote")
 dvc_access_key_id = Variable.get("dvc_access_key_id")
 dvc_secret_access_key = Variable.get("dvc_secret_access_key")
-data_version = "data-v1.0.0"  # Variable.get("data_version")
+data_version = Variable.get("data_version")
 config_map = Variable.get("model_training_configmap")
 connection_id = Variable.get("connection_id")
 log_level = Variable.get("log_level", default_var="INFO")
