@@ -19,6 +19,7 @@ historical_data_version = Variable.get("historical_data_version")
 new_data_version = Variable.get("new_data_version")
 config_map = Variable.get("drift_monitoring_configmap")
 connection_id = Variable.get("connection_id")
+model_endpoint = Variable.get("model_endpoint")
 log_level = Variable.get("log_level", default_var="INFO")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "true",
@@ -70,6 +71,7 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
     k8s.V1EnvVar(name="HISTORICAL_DATA_VERSION", value=historical_data_version),
     k8s.V1EnvVar(name="NEW_DATA_VERSION", value=new_data_version),
+    k8s.V1EnvVar(name="MODEL_ENDPOINT", value=model_endpoint),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
