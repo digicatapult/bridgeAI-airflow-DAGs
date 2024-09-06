@@ -13,6 +13,7 @@ docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_drift_monitoring")
 dvc_remote = Variable.get("dvc_remote")
+dvc_endpoint_url = Variable.get("dvc_endpoint_url")
 dvc_access_key_id = Variable.get("dvc_access_key_id")
 dvc_secret_access_key = Variable.get("dvc_secret_access_key")
 historical_data_version = Variable.get("historical_data_version")
@@ -72,6 +73,7 @@ env_vars = [
     k8s.V1EnvVar(name="HISTORICAL_DATA_VERSION", value=historical_data_version),
     k8s.V1EnvVar(name="NEW_DATA_VERSION", value=new_data_version),
     k8s.V1EnvVar(name="MODEL_ENDPOINT", value=model_endpoint),
+    k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
