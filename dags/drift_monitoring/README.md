@@ -1,4 +1,4 @@
-# Regression model training DAG
+# Drift monitoring DAG
 
 # How to:
 1. Install the dependencies in the container where Airflow is running\
@@ -6,22 +6,27 @@
     `pip install apache-airflow-providers-cncf-kubernetes`
 2. Set the following [Airflow variables](https://airflow.apache.org/docs/apache-airflow/stable/howto/variable.html). Refer to the [Notes](#notes) for details.
 
-| Variable                   | Default Value              | Description                                                                                                                                                                     |
-|----------------------------|----------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| namespace                  | None                       | Kubernetes cluster namespace                                                                                                                                                    |
-| base_image                 | None                       | Name of the model training image                                                                                                                                                |
-| docker_reg_secret          | None                       | Name of the secret for the docker registry pull                                                                                                                                 |
-| config_map                 | None                       | Name of the configmap containing the model training config                                                                                                                      |
-| connection_id              | None                       | Kubernetes connection id                                                                                                                                                        |
-| in_cluster                 | False                      | run kubernetes client with in_cluster configuration                                                                                                                             |
-| kubeconfig                 | `~/.kube/config`           | Path to the Kubeconfig file - [Reference](https://airflow.apache.org/docs/apache-airflow-providers-cncf-kubernetes/stable/operators.html#id3). Only used if IN_CLUSTER is False |
-| dvc_remote                 | "s3://artifacts"           | dvc remote                                                                                                                                                                      |
-| dvc_remote_name            | `regression-model-remote`  | name for dvc remote                                                                                                                                                             |
-| dvc_access_key_id          | `admin`                    | access key for dvc remote                                                                                                                                                       |
-| dvc_secret_access_key      | `password`                 | secret access key for dvc remote                                                                                                                                                |
-| github_secret              | `github-auth`              | Name of the secret for git access                                                                                                                                               |
-| github_secret_username_key | `username`                 | Key corresponding to the git username in the above github_secret                                                                                                                |
-| github_secret_password_key | `password`                 | Key corresponding to the git password in the above github_secret                                                                                                                |
+| Variable                   | Default Value                                  | Description                                                                                      |
+|----------------------------|------------------------------------------------|--------------------------------------------------------------------------------------------------|
+| namespace                  | None                                           | Kubernetes cluster namespace                                                                     |
+| base_image                 | None                                           | Name of the model training image                                                                 |
+| docker_reg_secret          | None                                           | Name of the secret for the docker registry pull                                                  |
+| config_map                 | None                                           | Name of the configmap containing the model training config                                       |
+| connection_id              | None                                           | Kubernetes connection id                                                                         |
+| in_cluster                 | False                                          | run kubernetes client with in_cluster configuration                                              |
+| dvc_remote                 | `s3://artifacts`                               | dvc remote                                                                                       |
+| dvc_endpoint_url           | `http://minio`                                 | dvc endpoint url                                                                                 |
+| dvc_access_key_id          | `admin`                                        | access key for dvc remote                                                                        |
+| dvc_secret_access_key      | `password`                                     | secret access key for dvc remote                                                                 |
+| github_secret              | `github-auth`                                  | Name of the secret for git access                                                                |
+| github_secret_username_key | `username`                                     | Key corresponding to the git username in the above github_secret                                 |
+| github_secret_password_key | `password`                                     | Key corresponding to the git password in the above github_secret                                 |
+| log_level                  | `INFO`                                         | log level                                                                                        |
+| data_repo                  | None                                           | data ingestion repo where the data is versioned with dvc                                         |
+| historical_data_version    | `data-v1.0.0`                                  | the data version (dvc tagged version from the data ingestion repo) used for training the model   |
+| new_data_version           | `data-v1.1.0`                                  | the data version (dvc tagged version from the data ingestion repo) curresponding to the new data |
+| model_endpoint             | `http://host.docker.internal:5001/invocations` | deployed model endpoint using which predictions can be made                                      |
+| drift_monitoring_pvc       | `drift_monitoring_pvc`                         | PVC claim name for this dag                                                                      |
 
 
 3. Add the absolute path to `./dags` directory of this repo to the Airflow dags path using one of the method\
@@ -39,7 +44,7 @@
 
     c. *Note: [This](https://airflow.apache.org/docs/helm-chart/stable/manage-dags-files.html#mounting-dags-using-git-sync-sidecar-with-persistence-enabled) could be a better approach for syncing the DAGs directory for deployment.*
 
-4. Open the Airflow web UI and trigger the DAG with name `model_training_dag`
+4. Open the Airflow web UI and trigger the DAG with name `drift_monitoring_dag`
 
 ---
 ## Notes:
