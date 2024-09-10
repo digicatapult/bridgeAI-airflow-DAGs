@@ -2,8 +2,9 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
 # Airflow variables
@@ -33,6 +34,7 @@ log_level = Variable.get("log_level", default_var="INFO")
 data_repo = Variable.get("data_repo")
 historical_data_version = Variable.get("historical_data_version")
 new_data_version = Variable.get("new_data_version")
+drift_report_bucket = Variable.get("drift_report_bucket")
 model_endpoint = Variable.get("model_endpoint")
 pvc_claim_name = Variable.get(
     "drift_monitoring_pvc", default_var="drift-monitoring-pvc"
@@ -76,6 +78,7 @@ env_vars = [
         name="HISTORICAL_DATA_VERSION", value=historical_data_version
     ),
     k8s.V1EnvVar(name="NEW_DATA_VERSION", value=new_data_version),
+    k8s.V1EnvVar(name="DRIFT_REPORT_BUCKET", value=drift_report_bucket),
     k8s.V1EnvVar(name="MODEL_ENDPOINT", value=model_endpoint),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
