@@ -6,19 +6,23 @@
     `pip install apache-airflow-providers-cncf-kubernetes`
 2. Set the following [Airflow variables](https://airflow.apache.org/docs/apache-airflow/stable/howto/variable.html). Refer to the [Notes](#notes) for details.
 
-| Variable                   | Default Value                                                           | Description                                                                |
-|----------------------------|-------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| data_url                   | None                                                                    | Data url of the csv file. You should be able to access the file via `curl` |
-| namespace                  | `default`                                                               | Kubernetes cluster namespace                                               |
-| base_image_data_ingestion  | `ghcr.io/digicatapult/bridgeAI-regression-model-data-ingestion:latest`  | Name of the data ingestion image                                           |
-| docker_reg_secret          | `ghcr-io`                                                               | Name of the secret for the docker registry pull                            |
-| data_ingestion_configmap   | `data-ingest-config-volume`                                             | Name of the configmap containing the data ingestion config                 |
-| connection_id              | `local-k8s`                                                             | Kubernetes connection id                                                   |
-| in_cluster                 | `False`                                                                 | Run kubernetes client with in_cluster configuration                        |
-| github_secret              | `github-auth`                                                           | Name of the secret for git access                                          |
-| github_secret_username_key | `username`                                                              | Key corresponding to the git username in the above github_secret           |
-| github_secret_password_key | `password`                                                              | Key corresponding to the git password in the above github_secret           |
-| data_ingestion_pvc         | `data-ingestion-pvc`                                                    | The name of the PVC assigned for data ingestion DAG                        |
+| Variable                   | Default Value                                                          | Description                                                                |
+|----------------------------|------------------------------------------------------------------------|----------------------------------------------------------------------------|
+| data_url                   | None                                                                   | Data url of the csv file. You should be able to access the file via `curl` |
+| namespace                  | `default`                                                              | Kubernetes cluster namespace                                               |
+| base_image_data_ingestion  | `ghcr.io/digicatapult/bridgeAI-regression-model-data-ingestion:latest` | Name of the data ingestion image                                           |
+| docker_reg_secret          | `ghcr-io`                                                              | Name of the secret for the docker registry pull                            |
+| data_ingestion_configmap   | `data-ingest-config-volume`                                            | Name of the configmap containing the data ingestion config                 |
+| connection_id              | `local-k8s`                                                            | Kubernetes connection id                                                   |
+| in_cluster                 | `False`                                                                | Run kubernetes client with in_cluster configuration                        |
+| github_secret              | `github-auth`                                                          | Name of the secret for git access                                          |
+| github_secret_username_key | `username`                                                             | Key corresponding to the git username in the above github_secret           |
+| github_secret_password_key | `password`                                                             | Key corresponding to the git password in the above github_secret           |
+| data_ingestion_pvc         | `data-ingestion-pvc`                                                   | The name of the PVC assigned for data ingestion DAG                        |
+| dvc_remote                 | "s3://artifacts"                                                       | dvc remote                                                                 |
+| dvc_remote_name            | "regression-model-remote"                                              | name for dvc remote                                                        |
+| dvc_access_key_id          | `admin`                                                                | access key for dvc remote                                                  |
+| dvc_secret_access_key      | `password`                                                             | secret access key for dvc remote                                           |
 
 3. Add the absolute path to `./dags` directory of this repo to the Airflow dags path using one of the method\
     a. Using the `airflow.cfg` file - Update the `dags_folder`
