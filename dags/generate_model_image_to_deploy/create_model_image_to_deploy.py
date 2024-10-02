@@ -32,7 +32,9 @@ env_vars = [
     k8s.V1EnvVar(name="DEPLOY_MODEL_NAME", value=deploy_model_name),
     k8s.V1EnvVar(name="DEPLOY_MODEL_ALIAS", value=deploy_model_alias),
     k8s.V1EnvVar(name="DOCKER_REGISTRY", value=docker_registry),
-    k8s.V1EnvVar(name="MLFLOW_BUILT_IMAGE_NAME", value=mlflow_built_image_name),
+    k8s.V1EnvVar(
+        name="MLFLOW_BUILT_IMAGE_NAME", value=mlflow_built_image_name
+    ),
     k8s.V1EnvVar(name="MLFLOW_BUILT_IMAGE_TAG", value=mlflow_built_image_tag),
 ]
 
@@ -53,6 +55,10 @@ def create_model_image_to_deploy_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
+        security_context={
+            "privileged": True,
+            "capabilities": {"add": ["SYS_ADMIN"]},
+        },
     )
 
     # Registering the task - Define the task dependencies here
