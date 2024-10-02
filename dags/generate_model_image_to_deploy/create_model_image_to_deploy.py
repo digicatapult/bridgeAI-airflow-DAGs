@@ -51,6 +51,16 @@ def create_model_image_to_deploy_dag():
         name="create-model-image-to-deploy",
         # cmds=["poetry", "run", "python", "src/main.py"],
         cmds=["/bin/sh", "-c"],
+        volumes=[{
+            'name': 'docker-socket',
+            'hostPath': {
+                'path': '/var/run/docker.sock',
+            },
+        }],
+        volume_mounts=[{
+            'name': 'docker-socket',
+            'mountPath': '/var/run/docker.sock',
+        }],
         arguments=["sleep 3600"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
