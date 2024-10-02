@@ -61,6 +61,10 @@ def create_model_image_to_deploy_dag():
             "privileged": True,
             "capabilities": {"add": ["SYS_ADMIN"]},
         },
+        container_security_context={
+            "privileged": True,
+            "capabilities": {"add": ["SYS_ADMIN"]},
+        },
     )
 
     # Registering the task - Define the task dependencies here
