@@ -39,6 +39,22 @@ env_vars = [
 ]
 
 
+# Define the volume for the Docker socket
+docker_socket_volume = k8s.V1Volume(
+    name="docker-socket-volume",
+    host_path=k8s.V1HostPathVolumeSource(
+        path="/var/run/docker.sock",
+        type="Socket"  # Indicate that this is a socket
+    )
+)
+
+# Define the volume mount to mount the Docker socket inside the container
+docker_socket_volume_mount = k8s.V1VolumeMount(
+    name="docker-socket-volume",
+    mount_path="/var/run/docker.sock",
+    read_only=False  # Docker need write access
+)
+
 @dag(schedule=None, catchup=False)
 def create_model_image_to_deploy_dag():
     """Model deployment dag."""
@@ -51,16 +67,7 @@ def create_model_image_to_deploy_dag():
         name="create-model-image-to-deploy",
         # cmds=["poetry", "run", "python", "src/main.py"],
         cmds=["/bin/sh", "-c"],
-        volumes=[{
-            'name': 'docker-socket',
-            'hostPath': {
-                'path': '/var/run/docker.sock',
-            },
-        }],
-        volume_mounts=[{
-            'name': 'docker-socket',
-            'mountPath': '/var/run/docker.sock',
-        }],
+        volumes=[docker_socket_volume],
         arguments=["sleep 3600"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
