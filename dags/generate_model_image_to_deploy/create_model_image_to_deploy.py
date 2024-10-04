@@ -40,12 +40,18 @@ env_vars = [
     k8s.V1EnvVar(name="MLFLOW_BUILT_IMAGE_TAG", value=mlflow_built_image_tag),
 ]
 
-# Define PVC and config
+# Define PVC
 pvc_volume = k8s.V1Volume(
     name="docker-context-volume",
     persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
         claim_name=pvc_claim_name,
     ),
+)
+
+# Mount PVC
+pvc_volume_mount = k8s.V1VolumeMount(
+    name="docker-context-volume",
+    mount_path="/app/mlflow-dockerfile",
 )
 # # TODO: Remove the host path volume
 # config_volume = k8s.V1Volume(
@@ -55,17 +61,22 @@ pvc_volume = k8s.V1Volume(
 #         type="Directory"
 #     )
 # )
-
-# Mount PVC and config
-pvc_volume_mount = k8s.V1VolumeMount(
-    name="docker-context-volume",
-    mount_path="/app/mlflow-dockerfile",
-)
 # config_volume_mount = k8s.V1VolumeMount(
 #     name="docker-config-volume",
 #     mount_path="/kaniko/.docker/config.json",
 #     sub_path="config.json",
 # )
+
+config_volume = k8s.V1Volume(
+    name="docker-config-volume",
+    config_map=k8s.V1ConfigMapVolumeSource(name="docker-config-volume"),
+)
+config_volume_mount = k8s.V1VolumeMount(
+    name="docker-config-volume",
+    mount_path="/kaniko/.docker/config.json",
+    sub_path="config.json",
+    read_only=True,
+)
 
 # TODO: remove the following auth details
 dockerhub_uname = Variable.get("dockerhub_uname")
