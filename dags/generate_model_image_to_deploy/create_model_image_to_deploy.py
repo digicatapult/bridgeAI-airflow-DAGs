@@ -134,8 +134,8 @@ def create_model_image_to_deploy_dag():
         get_logs=True,
         in_cluster=in_cluster,
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
-        volume_mounts=[pvc_volume_mount],
-        volumes=[pvc_volume],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
+        volumes=[pvc_volume, config_volume],
     )
 
     # Registering the task - Define the task dependencies here
