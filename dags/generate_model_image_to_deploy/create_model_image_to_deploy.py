@@ -47,25 +47,29 @@ pvc_volume = k8s.V1Volume(
         claim_name=pvc_claim_name,
     ),
 )
-# Remove the host path volume
-config_volume = k8s.V1Volume(
-    name="docker-config-volume",
-    host_path=k8s.V1HostPathVolumeSource(
-        path="/Users/rbaby/Code/mlops/bridgeAI-model-baseimage",
-        type="Directory"
-    )
-)
+# # TODO: Remove the host path volume
+# config_volume = k8s.V1Volume(
+#     name="docker-config-volume",
+#     host_path=k8s.V1HostPathVolumeSource(
+#         path="/Users/rbaby/Code/mlops/bridgeAI-model-baseimage",
+#         type="Directory"
+#     )
+# )
 
 # Mount PVC and config
 pvc_volume_mount = k8s.V1VolumeMount(
     name="docker-context-volume",
     mount_path="/app/mlflow-dockerfile",
 )
-config_volume_mount = k8s.V1VolumeMount(
-    name="docker-config-volume",
-    mount_path="/kaniko/.docker/config.json",
-    sub_path="config.json",
-)
+# config_volume_mount = k8s.V1VolumeMount(
+#     name="docker-config-volume",
+#     mount_path="/kaniko/.docker/config.json",
+#     sub_path="config.json",
+# )
+
+# TODO: remove the following auth details
+dockerhub_uname = Variable.get("dockerhub_uname")
+dockerhub_token = Variable.get("dockerhub_token")
 
 
 @dag(schedule=None, catchup=False)
@@ -111,12 +115,16 @@ def create_model_image_to_deploy_dag():
             f"--destination={docker_registry}/"
             f"{mlflow_built_image_name}:{mlflow_built_image_tag}",
         ],
+        env_vars={
+            'DOCKER_USERNAME': dockerhub_uname,
+            'DOCKER_PASSWORD': dockerhub_token,
+        },
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
-        volume_mounts=[pvc_volume_mount, config_volume_mount],
-        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount],
+        volumes=[pvc_volume],
     )
 
     # Registering the task - Define the task dependencies here
