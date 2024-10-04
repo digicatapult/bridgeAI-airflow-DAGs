@@ -26,7 +26,6 @@ docker_registry = Variable.get("docker_registry")
 mlflow_built_image_name = Variable.get("mlflow_built_image_name")
 mlflow_built_image_tag = Variable.get("mlflow_built_image_tag")
 
-
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
     k8s.V1EnvVar(name="DEPLOY_MODEL_NAME", value=deploy_model_name),
@@ -38,37 +37,85 @@ env_vars = [
     k8s.V1EnvVar(name="MLFLOW_BUILT_IMAGE_TAG", value=mlflow_built_image_tag),
 ]
 
+# Define PVC and config
+pvc_volume = k8s.V1Volume(
+    name="docker-context-volume",
+    persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
+        claim_name="docker-context-pvc",
+    ),
+)
+config_volume = k8s.V1Volume(
+    name="docker-config-volume",
+    persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
+        claim_name="docker-config-pvc",
+    ),
+)
+
+# Mount PVC and config
+pvc_volume_mount = k8s.V1VolumeMount(
+    name="docker-context-volume",
+    mount_path="/app/mlflow-dockerfile",
+)
+config_volume_mount = k8s.V1VolumeMount(
+    name="docker-config-volume",
+    mount_path="/kaniko/.docker/config.json",
+    sub_path="config.json",
+)
+
 
 @dag(schedule=None, catchup=False)
 def create_model_image_to_deploy_dag():
     """Model deployment dag."""
     # Define KubernetesPodOperator to fetch the data from dvc
-    deploy_model = KubernetesPodOperator(
+    generate_dockerfile = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
         image=base_image,
         task_id="create_model_image_to_deploy",
         name="create-model-image-to-deploy",
-        # cmds=["poetry", "run", "python", "src/main.py"],
-        cmds=["/bin/sh", "-c"],
-        arguments=["sleep 3600"],
+        cmds=["poetry", "run", "python", "src/main.py"],
+        # cmds=["/bin/sh", "-c"],
+        # arguments=["sleep 3600"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
-        security_context={
-            "privileged": True,
-            "capabilities": {"add": ["SYS_ADMIN"]},
-        },
-        container_security_context={
-            "privileged": True,
-            "capabilities": {"add": ["SYS_ADMIN"]},
-        },
+        # security_context={
+        #     "privileged": True,
+        #     "capabilities": {"add": ["SYS_ADMIN"]},
+        # },
+        # container_security_context={
+        #     "privileged": True,
+        #     "capabilities": {"add": ["SYS_ADMIN"]},
+        # },
+        volume_mounts=[pvc_volume_mount],
+        volumes=[pvc_volume],
+    )
+
+    build_and_push = KubernetesPodOperator(
+        kubernetes_conn_id=connection_id,
+        namespace=namespace,
+        task_id="build_and_push_docker_image",
+        name="build-and-push-docker-image",
+        image="bitnami/kaniko:latest",
+        cmds=["/kaniko/executor"],
+        arguments=[
+            "--dockerfile=/app/mlflow-dockerfile/Dockerfile",
+            "--context=dir:///app/mlflow-dockerfile",
+            f"--destination={docker_registry}/"
+            f"{mlflow_built_image_name}:{mlflow_built_image_tag}",
+        ],
+        is_delete_operator_pod=True,
+        get_logs=True,
+        in_cluster=in_cluster,
+        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        volume_mounts=[pvc_volume_mount, config_volume_mount],
+        volumes=[pvc_volume, config_volume],
     )
 
     # Registering the task - Define the task dependencies here
-    deploy_model
+    generate_dockerfile >> build_and_push
 
 
 # Instantiate the DAG
