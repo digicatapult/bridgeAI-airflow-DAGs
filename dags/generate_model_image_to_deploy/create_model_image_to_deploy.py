@@ -47,11 +47,13 @@ pvc_volume = k8s.V1Volume(
         claim_name=pvc_claim_name,
     ),
 )
+# Remove the host path volume
 config_volume = k8s.V1Volume(
     name="docker-config-volume",
-    persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
-        claim_name="docker-config-pvc",
-    ),
+    host_path=k8s.V1HostPathVolumeSource(
+        path="/Users/rbaby/Code/mlops/bridgeAI-model-baseimage",
+        type="Directory"
+    )
 )
 
 # Mount PVC and config
