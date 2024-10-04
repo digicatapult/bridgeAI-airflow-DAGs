@@ -78,10 +78,6 @@ config_volume_mount = k8s.V1VolumeMount(
     read_only=True,
 )
 
-# TODO: remove the following auth details
-dockerhub_uname = Variable.get("dockerhub_uname")
-dockerhub_token = Variable.get("dockerhub_token")
-
 
 @dag(schedule=None, catchup=False)
 def create_model_image_to_deploy_dag():
@@ -126,10 +122,6 @@ def create_model_image_to_deploy_dag():
             f"--destination={docker_registry}/"
             f"{mlflow_built_image_name}:{mlflow_built_image_tag}",
         ],
-        env_vars={
-            'DOCKER_USERNAME': dockerhub_uname,
-            'DOCKER_PASSWORD': dockerhub_token,
-        },
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
