@@ -25,6 +25,9 @@ deploy_model_alias = Variable.get("deploy_model_alias")
 docker_registry = Variable.get("docker_registry")
 mlflow_built_image_name = Variable.get("mlflow_built_image_name")
 mlflow_built_image_tag = Variable.get("mlflow_built_image_tag")
+pvc_claim_name = Variable.get(
+    "model_docker_build_context_pvc", default_var="model-docker-build-context-pvc"
+)
 
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
@@ -41,7 +44,7 @@ env_vars = [
 pvc_volume = k8s.V1Volume(
     name="docker-context-volume",
     persistent_volume_claim=k8s.V1PersistentVolumeClaimVolumeSource(
-        claim_name="docker-context-pvc",
+        claim_name=pvc_claim_name,
     ),
 )
 config_volume = k8s.V1Volume(
