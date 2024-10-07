@@ -38,7 +38,7 @@
 
     c. *Note: [This](https://airflow.apache.org/docs/helm-chart/stable/manage-dags-files.html#mounting-dags-using-git-sync-sidecar-with-persistence-enabled) could be a better approach for syncing the DAGs directory for deployment.*
 
-4. Open the Airflow web UI and trigger the DAG with name `create_model_image_to_deploy`
+4. Open the Airflow web UI and trigger the DAG with name `create_model_image_to_deploy_dag`
 
 ---
 ## Notes:
