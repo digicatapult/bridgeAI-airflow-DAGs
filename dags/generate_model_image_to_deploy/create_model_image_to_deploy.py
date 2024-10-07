@@ -2,10 +2,8 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.operators.python import PythonOperator
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
-    KubernetesPodOperator,
-)
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
+    KubernetesPodOperator
 from kubernetes.client import models as k8s
 
 # Env variables
@@ -26,7 +24,8 @@ docker_registry = Variable.get("docker_registry")
 mlflow_built_image_name = Variable.get("mlflow_built_image_name")
 mlflow_built_image_tag = Variable.get("mlflow_built_image_tag")
 pvc_claim_name = Variable.get(
-    "model_docker_build_context_pvc", default_var="model-docker-build-context-pvc"
+    "model_docker_build_context_pvc",
+    default_var="model-docker-build-context-pvc",
 )
 
 env_vars = [
@@ -53,20 +52,8 @@ pvc_volume_mount = k8s.V1VolumeMount(
     name="docker-context-volume",
     mount_path="/app/mlflow-dockerfile",
 )
-# # TODO: Remove the host path volume
-# config_volume = k8s.V1Volume(
-#     name="docker-config-volume",
-#     host_path=k8s.V1HostPathVolumeSource(
-#         path="/Users/rbaby/Code/mlops/bridgeAI-model-baseimage",
-#         type="Directory"
-#     )
-# )
-# config_volume_mount = k8s.V1VolumeMount(
-#     name="docker-config-volume",
-#     mount_path="/kaniko/.docker/config.json",
-#     sub_path="config.json",
-# )
 
+# TODO: remove the below configmap - This is only for dockerhub authentication
 config_volume = k8s.V1Volume(
     name="docker-config-volume",
     config_map=k8s.V1ConfigMapVolumeSource(name="docker-config-volume"),
@@ -82,33 +69,24 @@ config_volume_mount = k8s.V1VolumeMount(
 @dag(schedule=None, catchup=False)
 def create_model_image_to_deploy_dag():
     """Model deployment dag."""
-    # Define KubernetesPodOperator to fetch the data from dvc
+    # KubernetesPodOperator to generate Dockerfile
     generate_dockerfile = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
         image=base_image,
-        task_id="create_model_image_to_deploy",
-        name="create-model-image-to-deploy",
+        task_id="generate_dockerfile",
+        name="generate-dockerfile",
         cmds=["poetry", "run", "python", "src/main.py"],
-        # cmds=["/bin/sh", "-c"],
-        # arguments=["sleep 3600"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
-        # security_context={
-        #     "privileged": True,
-        #     "capabilities": {"add": ["SYS_ADMIN"]},
-        # },
-        # container_security_context={
-        #     "privileged": True,
-        #     "capabilities": {"add": ["SYS_ADMIN"]},
-        # },
         volume_mounts=[pvc_volume_mount],
         volumes=[pvc_volume],
     )
 
+    # Build and push image
     build_and_push = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
