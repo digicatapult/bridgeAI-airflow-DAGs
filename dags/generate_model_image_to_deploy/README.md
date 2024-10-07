@@ -55,12 +55,28 @@ kubectl create secret docker-registry docker-registry-secret \
 ```
 ### Creating configmap
 To create a configmap from a yaml file, run the following\
+
 ```shell
-kubectl create configmap training-config --from-file=config.yaml --namespace=bridgeai
+kubectl create configmap docker-config-volume --from-file=config.yaml --namespace=<name-of-namespace>
 ```
-*The current `config.yaml` file can be directly taken form the
-`bridgeAI-regression-model-training` repo.*\
+This configmap is used for authenticating for dockerhub.
+
+*The current `config.yaml` file is of the below format
+```config.yaml
+{
+  "auths": {
+    "https://index.docker.io/v1/": {
+      "auth": "your_base64_encoded_credentials"
+    }
+  }
+}
+```
+where `your_base64_encoded_credentials` is the Base64 encoding of your 
+dockerhub username and password/token in the format username:password.
+```bash
+echo -n 'your_username:your_password' | base64
+```
 To verify the config,
 ```shell
-kubectl describe configmap training-config --namespace=bridgeai
+kubectl describe configmap docker-config-volume --namespace=<name-of-namespace>
 ````
