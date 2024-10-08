@@ -73,7 +73,7 @@ secret_volume_mount = k8s.V1VolumeMount(
 
 
 @dag(schedule=None, catchup=False)
-def create_model_image_to_deploy_dag():
+def create_model_image_to_deploy_dag_ecr():
     """Model deployment dag."""
     # KubernetesPodOperator to generate Dockerfile
     generate_dockerfile = KubernetesPodOperator(
@@ -119,4 +119,4 @@ def create_model_image_to_deploy_dag():
 
 
 # Instantiate the DAG
-dag_instance = create_model_image_to_deploy_dag()
+dag_instance = create_model_image_to_deploy_dag_ecr()
