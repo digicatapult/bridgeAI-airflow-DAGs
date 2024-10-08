@@ -63,6 +63,7 @@ secret_volume = k8s.V1Volume(
             name='docker-push-secret-volume',
             secret=k8s.V1SecretVolumeSource(
                 secret_name=docker_push_secret_name,
+                items=[k8s.V1KeyToPath(key='.dockerconfigjson', path='config.json')],
             ),
         )
 secret_volume_mount = k8s.V1VolumeMount(
@@ -105,7 +106,7 @@ def create_model_image_to_deploy_dag_ecr():
             f"--destination={docker_registry}/"
             f"{mlflow_built_image_name}:{mlflow_built_image_tag}",
         ],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
