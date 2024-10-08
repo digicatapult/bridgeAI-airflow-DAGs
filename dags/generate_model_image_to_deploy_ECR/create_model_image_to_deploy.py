@@ -63,7 +63,6 @@ secret_volume = k8s.V1Volume(
             name='docker-push-secret-volume',
             secret=k8s.V1SecretVolumeSource(
                 secret_name=docker_push_secret_name,
-                items=[k8s.V1KeyToPath(key='config.json', path='config.json')]
             ),
         )
 secret_volume_mount = k8s.V1VolumeMount(
