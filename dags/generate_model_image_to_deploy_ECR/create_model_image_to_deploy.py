@@ -2,15 +2,16 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
 # Env variables
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 connection_id = Variable.get("connection_id")
-base_image = Variable.get("model_image_generation_base_image")
+base_image = Variable.get("base_image_model_image_generation")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "true",
     "1",
@@ -18,6 +19,8 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
 )
 
 mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
+mlflow_tracking_username = Variable.get("mlflow_tracking_username")
+mlflow_tracking_password = Variable.get("mlflow_tracking_password")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
 docker_registry = Variable.get("docker_registry")
@@ -34,6 +37,12 @@ docker_push_secret_name = Variable.get(
 
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
+    k8s.V1EnvVar(
+        name="MLFLOW_TRACKING_USERNAME", value=mlflow_tracking_username
+    ),
+    k8s.V1EnvVar(
+        name="MLFLOW_TRACKING_PASSWORD", value=mlflow_tracking_password
+    ),
     k8s.V1EnvVar(name="DEPLOY_MODEL_NAME", value=deploy_model_name),
     k8s.V1EnvVar(name="DEPLOY_MODEL_ALIAS", value=deploy_model_alias),
     k8s.V1EnvVar(name="DOCKER_REGISTRY", value=docker_registry),
@@ -60,16 +69,15 @@ pvc_volume_mount = k8s.V1VolumeMount(
 # TODO: Update the below secret -
 #  currently This is only for dockerhub authentication
 secret_volume = k8s.V1Volume(
-            name='docker-push-secret-volume',
-            secret=k8s.V1SecretVolumeSource(
-                secret_name=docker_push_secret_name,
-                items=[k8s.V1KeyToPath(key='.dockerconfigjson', path='config.json')],
-            ),
-        )
+    name="docker-push-secret-volume",
+    secret=k8s.V1SecretVolumeSource(
+        secret_name=docker_push_secret_name,
+        items=[k8s.V1KeyToPath(key=".dockerconfigjson", path="config.json")],
+    ),
+)
 secret_volume_mount = k8s.V1VolumeMount(
-            name='docker-push-secret-volume',
-            mount_path='/kaniko/.docker/'
-        )
+    name="docker-push-secret-volume", mount_path="/kaniko/.docker/"
+)
 
 
 @dag(schedule=None, catchup=False)

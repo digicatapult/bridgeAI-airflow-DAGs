@@ -2,8 +2,9 @@
 
 from airflow.decorators import dag
 from airflow.models import Variable
-from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import \
-    KubernetesPodOperator
+from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
+    KubernetesPodOperator,
+)
 from kubernetes.client import models as k8s
 
 # Env variables
@@ -18,6 +19,8 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
 )
 
 mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
+mlflow_tracking_username = Variable.get("mlflow_tracking_username")
+mlflow_tracking_password = Variable.get("mlflow_tracking_password")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
 docker_registry = Variable.get("docker_registry")
@@ -30,6 +33,12 @@ pvc_claim_name = Variable.get(
 
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
+    k8s.V1EnvVar(
+        name="MLFLOW_TRACKING_USERNAME", value=mlflow_tracking_username
+    ),
+    k8s.V1EnvVar(
+        name="MLFLOW_TRACKING_PASSWORD", value=mlflow_tracking_password
+    ),
     k8s.V1EnvVar(name="DEPLOY_MODEL_NAME", value=deploy_model_name),
     k8s.V1EnvVar(name="DEPLOY_MODEL_ALIAS", value=deploy_model_alias),
     k8s.V1EnvVar(name="DOCKER_REGISTRY", value=docker_registry),

@@ -6,21 +6,24 @@
     `pip install apache-airflow-providers-cncf-kubernetes`
 2. Set the following [Airflow variables](https://airflow.apache.org/docs/apache-airflow/stable/howto/variable.html). Refer to the [Notes](#notes) for details.
 
-| Variable                        | Default Value                     | Description                                                |
-|---------------------------------|-----------------------------------|------------------------------------------------------------|
-| namespace                       | None                              | Kubernetes cluster namespace                               |
-| base_image                      | None                              | Name of the model training image                           |
-| docker_reg_secret               | None                              | Name of the secret for the docker registry pull            |
-| config_map                      | None                              | Name of the configmap containing the model training config |
-| connection_id                   | None                              | Kubernetes connection id                                   |
-| in_cluster                      | False                             | run kubernetes client with in_cluster configuration        |
-| mlflow_tracking_uri             | `http://localhost:8080`           | The URI for the MLflow tracking server                     |
-| deploy_model_name               | `house_price_prediction_prod`     | The name of the model to be deployed                       |
-| deploy_model_alias              | `champion`                        | The alias for the deployed model                           |
-| docker_registry                 | `localhost:5000`                  | The Docker registry where images are stored                |
-| mlflow_built_image_name         | `mlflow_model`                    | The name of the MLflow model Docker image                  |
-| mlflow_built_image_tag          | `latest`                          | The tag for the MLflow model Docker image                  |
-| model_docker_build_context_pvc  | `model_docker_build_context_pvc`  | Name of the PVC allocated for this DAG                     | 
+| Variable                          | Default Value                                           | Description                                                |
+|-----------------------------------|---------------------------------------------------------|------------------------------------------------------------|
+| namespace                         | None                                                    | Kubernetes cluster namespace                               |
+| base_image_model_image_generation | `ghcr.io/digicatapult/bridgeAI-model-baseimage:latest`  | Name of the model training image                           |
+| docker_reg_secret                 | None                                                    | Name of the secret for the docker registry pull            |
+| config_map                        | None                                                    | Name of the configmap containing the model training config |
+| connection_id                     | None                                                    | Kubernetes connection id                                   |
+| in_cluster                        | False                                                   | run kubernetes client with in_cluster configuration        |
+| mlflow_tracking_uri               | `http://localhost:8080`                                 | The URI for the MLflow tracking server                     |
+| mlflow_tracking_username          | None                                                    | MLFlow tracking username                                   | 
+| mlflow_tracking_password          | None                                                    | MLFlow tracking password                                   |
+| deploy_model_name                 | `house_price_prediction_prod`                           | The name of the model to be deployed                       |
+| deploy_model_alias                | `champion`                                              | The alias for the deployed model                           |
+| docker_registry                   | `localhost:5000`                                        | The Docker registry where images are stored                |
+| mlflow_built_image_name           | `mlflow_model`                                          | The name of the MLflow model Docker image                  |
+| mlflow_built_image_tag            | `latest`                                                | The tag for the MLflow model Docker image                  |
+| model_docker_build_context_pvc    | `model_docker_build_context_pvc`                        | Name of the PVC allocated for this DAG                     |
+| model_docker_push_secret          | `ecr-credentials`                                       | Name of the secret to authenticate ECR access              |
 
 
 3. Add the absolute path to `./dags` directory of this repo to the Airflow dags path using one of the method\
