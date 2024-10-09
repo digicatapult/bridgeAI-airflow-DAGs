@@ -10,6 +10,8 @@ from kubernetes.client import models as k8s
 
 # Env variables
 mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
+mlflow_tracking_username = Variable.get("mlflow_tracking_username")
+mlflow_tracking_password = Variable.get("mlflow_tracking_password")
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_model_training")
@@ -87,6 +89,12 @@ env_vars = [
     ),
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
+    k8s.V1EnvVar(
+        name="MLFLOW_TRACKING_USERNAME", value=mlflow_tracking_username
+    ),
+    k8s.V1EnvVar(
+        name="MLFLOW_TRACKING_PASSWORD", value=mlflow_tracking_password
+    ),
 ]
 
 
