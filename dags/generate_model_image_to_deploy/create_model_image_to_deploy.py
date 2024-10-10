@@ -126,4 +126,4 @@ def create_model_image_to_deploy_dag():
 
 
 # Instantiate the DAG
-dag_instance = create_model_image_to_deploy_dag_ecr()
+dag_instance = create_model_image_to_deploy_dag()
