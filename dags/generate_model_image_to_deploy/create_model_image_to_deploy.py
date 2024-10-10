@@ -1,4 +1,4 @@
-"""Model deployment Airflow DAG for Kubernetes."""
+"""Docker image generation for model deployment DAG."""
 
 from airflow.decorators import dag
 from airflow.models import Variable
@@ -11,7 +11,7 @@ from kubernetes.client import models as k8s
 docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 connection_id = Variable.get("connection_id")
-base_image = Variable.get("model_image_generation_base_image")
+base_image = Variable.get("base_image_model_image_generation")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
     "true",
     "1",
@@ -23,12 +23,16 @@ mlflow_tracking_username = Variable.get("mlflow_tracking_username")
 mlflow_tracking_password = Variable.get("mlflow_tracking_password")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
-docker_registry = Variable.get("docker_registry")
+docker_registry = Variable.get("docker_registry_for_model_image")
 mlflow_built_image_name = Variable.get("mlflow_built_image_name")
 mlflow_built_image_tag = Variable.get("mlflow_built_image_tag")
 pvc_claim_name = Variable.get(
     "model_docker_build_context_pvc",
     default_var="model-docker-build-context-pvc",
+)
+docker_push_secret_name = Variable.get(
+    "docker_push_secret_name",
+    default_var="ecr-credentials",
 )
 
 env_vars = [
@@ -62,21 +66,21 @@ pvc_volume_mount = k8s.V1VolumeMount(
     mount_path="/app/mlflow-dockerfile",
 )
 
-# TODO: remove the below configmap - This is only for dockerhub authentication
-config_volume = k8s.V1Volume(
-    name="docker-config-volume",
-    config_map=k8s.V1ConfigMapVolumeSource(name="docker-config-volume"),
+# Secret for container registry authentication
+secret_volume = k8s.V1Volume(
+    name="docker-push-secret-volume",
+    secret=k8s.V1SecretVolumeSource(
+        secret_name=docker_push_secret_name,
+        items=[k8s.V1KeyToPath(key=".dockerconfigjson", path="config.json")],
+    ),
 )
-config_volume_mount = k8s.V1VolumeMount(
-    name="docker-config-volume",
-    mount_path="/kaniko/.docker/config.json",
-    sub_path="config.json",
-    read_only=True,
+secret_volume_mount = k8s.V1VolumeMount(
+    name="docker-push-secret-volume", mount_path="/kaniko/.docker/"
 )
 
 
 @dag(schedule=None, catchup=False)
-def create_model_image_to_deploy_dag():
+def create_model_image_to_deploy_dag_ecr():
     """Model deployment dag."""
     # KubernetesPodOperator to generate Dockerfile
     generate_dockerfile = KubernetesPodOperator(
@@ -109,12 +113,12 @@ def create_model_image_to_deploy_dag():
             f"--destination={docker_registry}/"
             f"{mlflow_built_image_name}:{mlflow_built_image_tag}",
         ],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
-        volume_mounts=[pvc_volume_mount, config_volume_mount],
-        volumes=[pvc_volume, config_volume],
+        volume_mounts=[pvc_volume_mount, secret_volume_mount],
+        volumes=[pvc_volume, secret_volume],
     )
 
     # Registering the task - Define the task dependencies here
@@ -122,4 +126,4 @@ def create_model_image_to_deploy_dag():
 
 
 # Instantiate the DAG
-dag_instance = create_model_image_to_deploy_dag()
+dag_instance = create_model_image_to_deploy_dag_ecr()

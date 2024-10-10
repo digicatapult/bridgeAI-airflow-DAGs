@@ -12,9 +12,9 @@
 | namespace                  | `default`                                                              | Kubernetes cluster namespace                                               |
 | base_image_data_ingestion  | `ghcr.io/digicatapult/bridgeAI-regression-model-data-ingestion:latest` | Name of the data ingestion image                                           |
 | docker_reg_secret          | `ghcr-io`                                                              | Name of the secret for the docker registry pull                            |
-| data_ingestion_configmap   | `data-ingest-config-volume`                                            | Name of the configmap containing the data ingestion config                 |
+| data_ingestion_configmap   | `data-ingest-configmap`                                                | Name of the configmap containing the data ingestion config                 |
 | connection_id              | `local-k8s`                                                            | Kubernetes connection id                                                   |
-| in_cluster                 | `False`                                                                | Run kubernetes client with in_cluster configuration                        |
+| in_cluster                 | `True`                                                                 | Run kubernetes client with in_cluster configuration                        |
 | github_secret              | `github-auth`                                                          | Name of the secret for git access                                          |
 | github_secret_username_key | `username`                                                             | Key corresponding to the git username in the above github_secret           |
 | github_secret_password_key | `password`                                                             | Key corresponding to the git password in the above github_secret           |
