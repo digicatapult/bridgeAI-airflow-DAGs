@@ -92,7 +92,7 @@ def create_model_image_to_deploy_dag():
         cmds=["poetry", "run", "python", "src/main.py"],
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         env_vars=env_vars,
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
         volume_mounts=[pvc_volume_mount],
