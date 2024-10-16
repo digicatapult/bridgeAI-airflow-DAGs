@@ -10,7 +10,7 @@ The generated model base image will be pushed to ECR.
 
 | Variable                          | Default Value                                          | Description                                                                                                                                         |
 |-----------------------------------|--------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
-| namespace                         | `default`                                              | Kubernetes cluster namespace                                                                                                                        |
+| namespace                         | `airflow`                                              | Kubernetes cluster namespace                                                                                                                        |
 | docker_reg_secret                 | `ghcr-io`                                              | Name of the secret for the docker registry pull                                                                                                     |
 | connection_id                     | `local-k8s`                                            | Kubernetes connection id                                                                                                                            |
 | in_cluster                        | `True`                                                 | run kubernetes client with in_cluster configuration                                                                                                 |

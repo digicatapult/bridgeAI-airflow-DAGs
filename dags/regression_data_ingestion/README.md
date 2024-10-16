@@ -9,7 +9,7 @@
 | Variable                   | Default Value                                                          | Description                                                                |
 |----------------------------|------------------------------------------------------------------------|----------------------------------------------------------------------------|
 | data_url                   | None                                                                   | Data url of the csv file. You should be able to access the file via `curl` |
-| namespace                  | `default`                                                              | Kubernetes cluster namespace                                               |
+| namespace                  | `airflow`                                                              | Kubernetes cluster namespace                                               |
 | base_image_data_ingestion  | `ghcr.io/digicatapult/bridgeAI-regression-model-data-ingestion:latest` | Name of the data ingestion image                                           |
 | docker_reg_secret          | `ghcr-io`                                                              | Name of the secret for the docker registry pull                            |
 | data_ingestion_configmap   | `data-ingest-configmap`                                                | Name of the configmap containing the data ingestion config                 |

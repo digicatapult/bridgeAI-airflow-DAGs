@@ -8,7 +8,7 @@
 
 | Variable                    | Default Value                                                                  | Description                                                                                      |
 |-----------------------------|--------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| namespace                   | `default`                                                                      | Kubernetes cluster namespace                                                                     |
+| namespace                   | `airflow`                                                                      | Kubernetes cluster namespace                                                                     |
 | base_image_drift_monitoring | `ghcr.io/digicatapult/bridgeai-drift-monitoring:latest`                        | Name of the model training image                                                                 |
 | docker_reg_secret           | `ghcr-io`                                                                      | Name of the secret for the docker registry pull                                                  |
 | drift_monitoring_configmap  | `drift-monitoring-configmap`                                                   | Name of the configmap containing the model training config                                       |
