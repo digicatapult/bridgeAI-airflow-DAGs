@@ -40,9 +40,9 @@ request_memory = Variable.get(
     "docker_build_pod_request_memory", default_var="4Gi"
 )
 request_cpu = Variable.get("docker_build_pod_request_cpu", default_var="500m")
-# request_eph_storage = Variable.get(
-#     "docker_build_pod_request_eph_storage", default_var="2Gi"
-# )
+request_eph_storage = Variable.get(
+    "docker_build_pod_request_eph_storage", default_var="2Gi"
+)
 limit_memory = Variable.get("docker_build_pod_limit_memory", default_var="6Gi")
 limit_cpu = Variable.get("docker_build_pod_limit_cpu", default_var="1")
 limit_eph_storage = Variable.get(
@@ -54,12 +54,12 @@ resources = k8s.V1ResourceRequirements(
     requests={
         "memory": request_memory,
         "cpu": request_cpu,
-        # "ephemeral-storage": request_eph_storage,
+        "ephemeral-storage": request_eph_storage,
     },
     limits={
         "memory": limit_memory,
         "cpu": limit_cpu,
-        "ephemeral-storage": limit_eph_storage,
+        # "ephemeral-storage": limit_eph_storage,
     },
 )
 
