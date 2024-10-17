@@ -35,6 +35,14 @@ docker_push_secret_name = Variable.get(
     default_var="ecr-credentials",
 )
 
+# Retrieve Airflow variables for resources
+request_memory = Variable.get(
+    "docker_build_pod_request_memory", default_var="2Gi"
+)
+request_cpu = Variable.get("docker_build_pod_request_cpu", default_var="500m")
+limit_memory = Variable.get("docker_build_pod_limit_memory", default_var="4Gi")
+limit_cpu = Variable.get("docker_build_pod_limit_cpu", default_var="1")
+
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
     k8s.V1EnvVar(
@@ -119,6 +127,13 @@ def create_model_image_to_deploy_dag():
         image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
         volume_mounts=[pvc_volume_mount, secret_volume_mount],
         volumes=[pvc_volume, secret_volume],
+        # Set resource constraints
+        resources={
+            "request_memory": request_memory,
+            "request_cpu": request_cpu,
+            "limit_memory": limit_memory,
+            "limit_cpu": limit_cpu,
+        },
     )
 
     # Registering the task - Define the task dependencies here
