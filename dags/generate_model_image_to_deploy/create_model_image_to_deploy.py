@@ -39,15 +39,14 @@ docker_push_secret_name = Variable.get(
 request_memory = Variable.get(
     "docker_build_pod_request_memory", default_var="4Gi"
 )
-request_cpu = Variable.get("docker_build_pod_request_cpu", default_var="500m")
+request_cpu = Variable.get("docker_build_pod_request_cpu", default_var="1")
 request_eph_storage = Variable.get(
-    "docker_build_pod_request_eph_storage", default_var="2Gi"
+    "docker_build_pod_request_eph_storage", default_var="8Gi"
 )
-limit_memory = Variable.get("docker_build_pod_limit_memory", default_var="6Gi")
-limit_cpu = Variable.get("docker_build_pod_limit_cpu", default_var="1")
-limit_eph_storage = Variable.get(
-    "docker_build_pod_limit_eph_storage", default_var="8Gi"
+limit_memory = Variable.get(
+    "docker_build_pod_limit_memory", default_var="30Gi"
 )
+limit_cpu = Variable.get("docker_build_pod_limit_cpu", default_var="2")
 
 
 resources = k8s.V1ResourceRequirements(
@@ -59,7 +58,6 @@ resources = k8s.V1ResourceRequirements(
     limits={
         "memory": limit_memory,
         "cpu": limit_cpu,
-        # "ephemeral-storage": limit_eph_storage,
     },
 )
 
