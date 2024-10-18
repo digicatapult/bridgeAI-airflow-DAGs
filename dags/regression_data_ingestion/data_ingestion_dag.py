@@ -13,6 +13,7 @@ docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_data_ingestion")
 dvc_remote = Variable.get("dvc_remote")
+dvc_endpoint_url = Variable.get("dvc_endpoint_url")
 dvc_access_key_id = Variable.get("dvc_access_key_id")
 dvc_secret_access_key = Variable.get("dvc_secret_access_key")
 config_map = Variable.get("data_ingestion_configmap")
@@ -79,6 +80,7 @@ env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
     k8s.V1EnvVar(name="DVC_REMOTE", value=dvc_remote),
+    k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
     k8s.V1EnvVar(
