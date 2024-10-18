@@ -35,31 +35,41 @@ docker_push_secret_name = Variable.get(
     default_var="ecr-credentials",
 )
 
-# Retrieve Airflow variables for resources
-request_memory = Variable.get(
-    "docker_build_pod_request_memory", default_var="4Gi"
+enable_resource_constraints = Variable.get(
+    "docker_build_pod_resource_limits_enabled", default_var="True"
+).lower() in (
+    "true",
+    "1",
+    "t",
 )
-request_cpu = Variable.get("docker_build_pod_request_cpu", default_var="1")
-request_eph_storage = Variable.get(
-    "docker_build_pod_request_eph_storage", default_var="8Gi"
-)
-limit_memory = Variable.get(
-    "docker_build_pod_limit_memory", default_var="30Gi"
-)
-limit_cpu = Variable.get("docker_build_pod_limit_cpu", default_var="2")
 
+if enable_resource_constraints:
+    # Retrieve Airflow variables for resources
+    request_memory = Variable.get(
+        "docker_build_pod_request_memory", default_var="4Gi"
+    )
+    request_cpu = Variable.get("docker_build_pod_request_cpu", default_var="1")
+    request_eph_storage = Variable.get(
+        "docker_build_pod_request_eph_storage", default_var="8Gi"
+    )
+    limit_memory = Variable.get(
+        "docker_build_pod_limit_memory", default_var="30Gi"
+    )
+    limit_cpu = Variable.get("docker_build_pod_limit_cpu", default_var="2")
 
-resources = k8s.V1ResourceRequirements(
-    requests={
-        "memory": request_memory,
-        "cpu": request_cpu,
-        "ephemeral-storage": request_eph_storage,
-    },
-    limits={
-        "memory": limit_memory,
-        "cpu": limit_cpu,
-    },
-)
+    resources = k8s.V1ResourceRequirements(
+        requests={
+            "memory": request_memory,
+            "cpu": request_cpu,
+            "ephemeral-storage": request_eph_storage,
+        },
+        limits={
+            "memory": limit_memory,
+            "cpu": limit_cpu,
+        },
+    )
+else:
+    resources = None
 
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
