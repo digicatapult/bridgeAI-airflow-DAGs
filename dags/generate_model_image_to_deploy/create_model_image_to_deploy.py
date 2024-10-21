@@ -6,6 +6,14 @@ from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
 from kubernetes.client import models as k8s
+from kubernetes.client import (
+    V1Affinity,
+    V1NodeAffinity,
+    V1NodeSelector,
+    V1NodeSelectorTerm,
+    V1NodeSelectorRequirement,
+)
+
 
 # Env variables
 docker_reg_secret = Variable.get("docker_reg_secret")
@@ -37,6 +45,14 @@ docker_push_secret_name = Variable.get(
 
 enable_resource_constraints = Variable.get(
     "docker_build_pod_resource_limits_enabled", default_var="True"
+).lower() in (
+    "true",
+    "1",
+    "t",
+)
+
+enable_node_selection = Variable.get(
+    "docker_build_pod_node_label_enabled", default_var="True"
 ).lower() in (
     "true",
     "1",
@@ -114,6 +130,29 @@ secret_volume_mount = k8s.V1VolumeMount(
     name="docker-push-secret-volume", mount_path="/kaniko/.docker/"
 )
 
+if enable_node_selection:
+    node_label = Variable.get("docker_build_pod_node_label", "t3.large")
+    # Define node affinity
+    node_affinity = V1Affinity(
+        node_affinity=V1NodeAffinity(
+            required_during_scheduling_ignored_during_execution=V1NodeSelector(
+                node_selector_terms=[
+                    V1NodeSelectorTerm(
+                        match_expressions=[
+                            V1NodeSelectorRequirement(
+                                key="instance-type",
+                                operator="In",
+                                values=[node_label],
+                            )
+                        ]
+                    )
+                ]
+            )
+        )
+    )
+else:
+    node_affinity = None
+
 
 @dag(schedule=None, catchup=False)
 def create_model_image_to_deploy_dag():
@@ -157,6 +196,7 @@ def create_model_image_to_deploy_dag():
         volumes=[pvc_volume, secret_volume],
         # Set resource constraints
         container_resources=resources,
+        affinity=node_affinity,
     )
 
     # Registering the task - Define the task dependencies here
