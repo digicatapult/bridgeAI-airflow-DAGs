@@ -131,7 +131,7 @@ secret_volume_mount = k8s.V1VolumeMount(
 )
 
 if enable_node_selection:
-    node_label = Variable.get("docker_build_pod_node_label", "t3.large")
+    node_label = Variable.get("docker_build_pod_node_label", "t3.2xlarge")
     # Define node affinity
     node_affinity = V1Affinity(
         node_affinity=V1NodeAffinity(
@@ -140,7 +140,7 @@ if enable_node_selection:
                     V1NodeSelectorTerm(
                         match_expressions=[
                             V1NodeSelectorRequirement(
-                                key="instance-type",
+                                key="node.kubernetes.io/instance-type",
                                 operator="In",
                                 values=[node_label],
                             )
