@@ -5,18 +5,16 @@ from airflow.models import Variable
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
-from kubernetes.client import models as k8s
 from kubernetes.client import (
     V1Affinity,
     V1NodeAffinity,
     V1NodeSelector,
-    V1NodeSelectorTerm,
     V1NodeSelectorRequirement,
+    V1NodeSelectorTerm,
 )
-
+from kubernetes.client import models as k8s
 
 # Env variables
-docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 connection_id = Variable.get("connection_id")
 base_image = Variable.get("base_image_model_image_generation")
@@ -86,6 +84,19 @@ if enable_resource_constraints:
     )
 else:
     resources = None
+
+base_image_needs_auth = Variable.get(
+    "is_base_image_authenticated", default_var="False"
+).lower() in (
+    "true",
+    "1",
+    "t",
+)
+if base_image_needs_auth:
+    docker_reg_secret = Variable.get("docker_reg_secret")
+    image_pull_secrets = [k8s.V1LocalObjectReference(docker_reg_secret)]
+else:
+    image_pull_secrets = None
 
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
@@ -165,7 +176,7 @@ def create_model_image_to_deploy_dag():
         task_id="generate_dockerfile",
         name="generate-dockerfile",
         cmds=["poetry", "run", "python", "src/main.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         is_delete_operator_pod=True,
         get_logs=True,
@@ -191,7 +202,7 @@ def create_model_image_to_deploy_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         volume_mounts=[pvc_volume_mount, secret_volume_mount],
         volumes=[pvc_volume, secret_volume],
         # Set resource constraints

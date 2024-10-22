@@ -10,7 +10,6 @@ from kubernetes.client import models as k8s
 # Airflow variables
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_drift_monitoring")
-docker_reg_secret = Variable.get("docker_reg_secret")
 config_map = Variable.get("drift_monitoring_configmap")
 connection_id = Variable.get("connection_id")
 in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
@@ -39,6 +38,19 @@ model_endpoint = Variable.get("model_endpoint")
 pvc_claim_name = Variable.get(
     "drift_monitoring_pvc", default_var="drift-monitoring-pvc"
 )
+
+base_image_needs_auth = Variable.get(
+    "is_base_image_authenticated", default_var="False"
+).lower() in (
+    "true",
+    "1",
+    "t",
+)
+if base_image_needs_auth:
+    docker_reg_secret = Variable.get("docker_reg_secret")
+    image_pull_secrets = [k8s.V1LocalObjectReference(docker_reg_secret)]
+else:
+    image_pull_secrets = None
 
 # Define PVC
 pvc_volume = k8s.V1Volume(
@@ -111,7 +123,7 @@ def drift_monitoring_dag():
         task_id="fetch_data_from_dvc",
         name="fetch-data-from-dvc",
         cmds=["poetry", "run", "python", "src/get_data.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
@@ -127,7 +139,7 @@ def drift_monitoring_dag():
         task_id="perform_inference_on_datasets",
         name="perform-inference-on-datasets",
         cmds=["poetry", "run", "python", "src/inference.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
@@ -143,7 +155,7 @@ def drift_monitoring_dag():
         task_id="generate_drift_report",
         name="generate-drift-report",
         cmds=["poetry", "run", "python", "src/drift_report.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
@@ -159,7 +171,7 @@ def drift_monitoring_dag():
         task_id="push_drift_report",
         name="push-drift-report",
         cmds=["poetry", "run", "python", "src/upload_report.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],

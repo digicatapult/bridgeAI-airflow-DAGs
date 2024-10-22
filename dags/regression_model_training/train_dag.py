@@ -12,7 +12,6 @@ from kubernetes.client import models as k8s
 mlflow_tracking_uri = Variable.get("mlflow_tracking_uri")
 mlflow_tracking_username = Variable.get("mlflow_tracking_username")
 mlflow_tracking_password = Variable.get("mlflow_tracking_password")
-docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_model_training")
 dvc_remote = Variable.get("dvc_remote")
@@ -37,6 +36,19 @@ github_secret_password_key = Variable.get(
 pvc_claim_name = Variable.get(
     "model_training_pvc", default_var="model-training-pvc"
 )
+
+base_image_needs_auth = Variable.get(
+    "is_base_image_authenticated", default_var="False"
+).lower() in (
+    "true",
+    "1",
+    "t",
+)
+if base_image_needs_auth:
+    docker_reg_secret = Variable.get("docker_reg_secret")
+    image_pull_secrets = [k8s.V1LocalObjectReference(docker_reg_secret)]
+else:
+    image_pull_secrets = None
 
 # Define PVC
 pvc_volume = k8s.V1Volume(
@@ -119,7 +131,7 @@ def model_training_dag():
         task_id="data_fetch_from_dvc",
         name="data-fetch-from-dvc",
         cmds=["poetry", "run", "python", "src/fetch_data.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
@@ -135,7 +147,7 @@ def model_training_dag():
         task_id="preprocess_data",
         name="preprocess-data",
         cmds=["poetry", "run", "python", "src/preprocess.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
@@ -151,7 +163,7 @@ def model_training_dag():
         task_id="model_training",
         name="model-training",
         cmds=["poetry", "run", "python", "src/train.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
@@ -181,7 +193,7 @@ def model_training_dag():
             "--run_id",
             "{{ ti.xcom_pull(task_ids='extract_run_id') }}",
         ],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
