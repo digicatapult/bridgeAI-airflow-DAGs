@@ -9,7 +9,6 @@ from kubernetes.client import models as k8s
 
 # Get Airflow Variables
 data_url = Variable.get("data_url")
-docker_reg_secret = Variable.get("docker_reg_secret")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_data_ingestion")
 dvc_remote = Variable.get("dvc_remote")
@@ -74,8 +73,20 @@ config_volume_mount = k8s.V1VolumeMount(
 # Define the github secret as environment variables
 secret = k8s.V1SecretEnvSource(name="github-auth")
 
-# Define the environment variables to read the username and password
+base_image_needs_auth = Variable.get(
+    "is_base_image_authenticated", default_var="False"
+).lower() in (
+    "true",
+    "1",
+    "t",
+)
+if base_image_needs_auth:
+    docker_reg_secret = Variable.get("docker_reg_secret")
+    image_pull_secrets = [k8s.V1LocalObjectReference(docker_reg_secret)]
+else:
+    image_pull_secrets = None
 
+# Define the environment variables
 env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
@@ -112,7 +123,7 @@ def data_ingestion_dag():
         task_id="data_collection_task",
         name="regression-data-collect",
         cmds=["poetry", "run", "python", "src/data_gathering.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars={
             "DATA_URL": data_url,
             "CONFIG_PATH": "/config/config.yaml",
@@ -132,7 +143,7 @@ def data_ingestion_dag():
         task_id="data_cleansing_task",
         name="regression-data-cleanse",
         cmds=["poetry", "run", "python", "src/data_cleansing.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars={
             "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
@@ -151,7 +162,7 @@ def data_ingestion_dag():
         task_id="data_split_task",
         name="regression-data-split",
         cmds=["poetry", "run", "python", "src/data_splitting.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars={
             "CONFIG_PATH": "/config/config.yaml",
             "LOG_LEVEL": log_level,
@@ -170,7 +181,7 @@ def data_ingestion_dag():
         task_id="data_push_task",
         name="regression-data-push",
         cmds=["poetry", "run", "python", "src/data_push.py"],
-        image_pull_secrets=[k8s.V1LocalObjectReference(docker_reg_secret)],
+        image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount_from_repo, config_volume_mount],

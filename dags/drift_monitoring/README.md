@@ -9,8 +9,9 @@
 | Variable                    | Default Value                                                                  | Description                                                                                      |
 |-----------------------------|--------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | namespace                   | `airflow`                                                                      | Kubernetes cluster namespace                                                                     |
-| base_image_drift_monitoring | `ghcr.io/digicatapult/bridgeai-drift-monitoring:latest`                        | Name of the model training image                                                                 |
-| docker_reg_secret           | `ghcr-io`                                                                      | Name of the secret for the docker registry pull                                                  |
+| base_image_drift_monitoring | `digicatapult/bridgeai-drift-monitoring:latest`                                | Name of the model training image                                                                 |
+| is_base_image_authenticated | `False`                                                                        | Is the base image `base_image_drift_monitoring` needs authentication to pull?                    |
+| docker_reg_secret           | `ghcr-io`                                                                      | Name of the secret for the docker registry pull if `is_base_image_authenticated` is `True`       |
 | drift_monitoring_configmap  | `drift-monitoring-configmap`                                                   | Name of the configmap containing the model training config                                       |
 | connection_id               | `local-k8s`                                                                    | Kubernetes connection id                                                                         |
 | in_cluster                  | `True`                                                                         | run kubernetes client with in_cluster configuration                                              |
