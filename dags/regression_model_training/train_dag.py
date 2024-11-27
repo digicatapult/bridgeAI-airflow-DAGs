@@ -50,13 +50,8 @@ if base_image_needs_auth:
 else:
     image_pull_secrets = None
 
-deploy_as_code = base_image_needs_auth = Variable.get(
-    "deploy_as_code", default_var="False"
-).lower() in (
-    "true",
-    "1",
-    "t",
-)
+deploy_as_code = Variable.get(
+    "deploy_as_code", default_var="False")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
 
