@@ -175,7 +175,7 @@ def model_training_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=False,
+        is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
         do_xcom_push=True,
