@@ -50,6 +50,11 @@ if base_image_needs_auth:
 else:
     image_pull_secrets = None
 
+deploy_as_code = Variable.get(
+    "deploy_as_code", default_var="False")
+deploy_model_name = Variable.get("deploy_model_name")
+deploy_model_alias = Variable.get("deploy_model_alias")
+
 # Define PVC
 pvc_volume = k8s.V1Volume(
     name="model-training-volume",
@@ -107,6 +112,9 @@ env_vars = [
     k8s.V1EnvVar(
         name="MLFLOW_TRACKING_PASSWORD", value=mlflow_tracking_password
     ),
+    k8s.V1EnvVar(name="DEPLOY_AS_CODE", value=deploy_as_code),
+    k8s.V1EnvVar(name="DEPLOY_MODEL_NAME", value=deploy_model_name),
+    k8s.V1EnvVar(name="DEPLOY_MODEL_ALIAS", value=deploy_model_alias),
 ]
 
 
