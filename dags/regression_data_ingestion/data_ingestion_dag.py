@@ -24,10 +24,9 @@ conn = BaseHook.get_connection(conn_id)
 dvc_access_key_id = conn.login  # Access Key ID
 dvc_secret_access_key = conn.password  # Secret Access Key
 
-if dvc_access_key_id is None or dvc_secret_access_key is None:
+if dvc_secret_access_key is None:
     raise ValueError(
-        "AWS credentials `dvc_access_key_id` or "
-        "`dvc_secret_access_key` is missing "
+        "AWS credentials `dvc_secret_access_key` is missing "
         "in the Airflow connection."
     )
 
@@ -110,9 +109,7 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
-    k8s.V1EnvVar(name="DVC_REMOTE_REGION", value=dvc_remote_region),
-    k8s.V1EnvVar(name="AWS_ACCESS_KEY_ID", value=dvc_access_key_id),
-    k8s.V1EnvVar(name="AWS_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
@@ -153,6 +150,7 @@ def data_ingestion_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     data_clean_pod = KubernetesPodOperator(
@@ -172,6 +170,7 @@ def data_ingestion_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     data_split_pod = KubernetesPodOperator(
@@ -191,6 +190,7 @@ def data_ingestion_dag():
         is_delete_operator_pod=True,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     data_push_pod = KubernetesPodOperator(
@@ -207,6 +207,7 @@ def data_ingestion_dag():
         is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     # Registering the task - task dependencies
