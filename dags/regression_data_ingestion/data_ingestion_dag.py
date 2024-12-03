@@ -102,6 +102,8 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="AWS_ACCESS_KEY_ID", value=dvc_access_key_id),
+    k8s.V1EnvVar(name="AWS_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
@@ -193,7 +195,7 @@ def data_ingestion_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount_from_repo, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
     )
