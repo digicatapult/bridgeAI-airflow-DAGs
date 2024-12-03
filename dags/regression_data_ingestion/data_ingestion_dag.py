@@ -14,11 +14,9 @@ namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_data_ingestion")
 dvc_remote = Variable.get("dvc_remote")
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
-# dvc_access_key_id = Variable.get("dvc_access_key_id")
-# dvc_secret_access_key = Variable.get("dvc_secret_access_key")
 
-# Retrieve connection details
-conn_id = "aws_default"  # Connection ID in Airflow
+# Retrieve AWS connection details - this must be set already
+conn_id = Variable.get("aws_conn_name", default_var="aws_default")
 conn = BaseHook.get_connection(conn_id)
 
 # Extract connection details
