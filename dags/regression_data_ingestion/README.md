@@ -26,6 +26,8 @@
 | dvc_secret_access_key       | `password`                                                      | secret access key for dvc remote                                                                                   |
 | dvc_endpoint_url            | `http://minio`                                                  | The URL endpoint for the DVC storage backend. This is typically the URL of an S3-compatible service, such as MinIO |
 
+# TODO: update the airflow connection details here
+
 3. Add the absolute path to `./dags` directory of this repo to the Airflow dags path using one of the method\
     a. Using the `airflow.cfg` file - Update the `dags_folder`
     ```yaml
