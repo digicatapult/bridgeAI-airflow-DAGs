@@ -24,12 +24,6 @@ conn = BaseHook.get_connection(conn_id)
 dvc_access_key_id = conn.login  # Access Key ID
 dvc_secret_access_key = conn.password  # Secret Access Key
 
-if dvc_secret_access_key is None:
-    print(
-        "AWS credentials `dvc_secret_access_key` is missing "
-        "in the Airflow connection."
-    )
-
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
 log_level = Variable.get("log_level", default_var="INFO")
