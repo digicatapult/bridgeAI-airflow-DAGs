@@ -14,6 +14,7 @@ namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_data_ingestion")
 dvc_remote = Variable.get("dvc_remote")
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
+dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
 
 # Retrieve AWS connection details - this must be set already
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
@@ -22,6 +23,13 @@ conn = BaseHook.get_connection(conn_id)
 # Extract connection details
 dvc_access_key_id = conn.login  # Access Key ID
 dvc_secret_access_key = conn.password  # Secret Access Key
+
+if dvc_access_key_id is None or dvc_secret_access_key is None:
+    raise ValueError(
+        "AWS credentials `dvc_access_key_id` or "
+        "`dvc_secret_access_key` is missing "
+        "in the Airflow connection."
+    )
 
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
@@ -102,6 +110,7 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="DVC_REMOTE_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(name="AWS_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="AWS_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
     k8s.V1EnvVar(
