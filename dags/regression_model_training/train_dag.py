@@ -158,6 +158,7 @@ def model_training_dag():
         get_logs=True,
         in_cluster=in_cluster,
         service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     preprocess_pod = KubernetesPodOperator(
@@ -175,6 +176,7 @@ def model_training_dag():
         get_logs=True,
         in_cluster=in_cluster,
         service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     model_train_pod = KubernetesPodOperator(
@@ -193,6 +195,7 @@ def model_training_dag():
         in_cluster=in_cluster,
         do_xcom_push=True,
         service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     extract_run_id_task = PythonOperator(
@@ -223,6 +226,7 @@ def model_training_dag():
         get_logs=True,
         in_cluster=in_cluster,
         service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     # Registering the task - Define the task dependencies here
