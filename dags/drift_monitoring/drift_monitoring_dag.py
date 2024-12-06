@@ -1,6 +1,7 @@
 """Drift monitoring Airflow DAG for Kubernetes."""
 
 from airflow.decorators import dag
+from airflow.hooks.base import BaseHook
 from airflow.models import Variable
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
@@ -19,8 +20,12 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
 )
 dvc_remote = Variable.get("dvc_remote")
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
-dvc_access_key_id = Variable.get("dvc_access_key_id")
-dvc_secret_access_key = Variable.get("dvc_secret_access_key")
+dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
+
+# Retrieve AWS connection details - this must be set already
+conn_id = Variable.get("aws_conn_name", default_var="aws_default")
+conn = BaseHook.get_connection(conn_id)
+
 github_secret = Variable.get("github_secret", default_var="github-auth")
 github_secret_username_key = Variable.get(
     "github_secret_username_key", default_var="username"
