@@ -139,6 +139,7 @@ def drift_monitoring_dag():
         is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     do_inference = KubernetesPodOperator(
@@ -155,6 +156,7 @@ def drift_monitoring_dag():
         is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     generate_drift_report = KubernetesPodOperator(
@@ -171,6 +173,7 @@ def drift_monitoring_dag():
         is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     push_drift_report = KubernetesPodOperator(
@@ -187,6 +190,7 @@ def drift_monitoring_dag():
         is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     fetch_data >> do_inference >> generate_drift_report >> push_drift_report
