@@ -94,6 +94,7 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(name="DATA_REPO", value=data_repo),
     k8s.V1EnvVar(
         name="HISTORICAL_DATA_VERSION", value=historical_data_version
