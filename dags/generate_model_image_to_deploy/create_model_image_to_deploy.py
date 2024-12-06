@@ -183,6 +183,7 @@ def create_model_image_to_deploy_dag():
         in_cluster=in_cluster,
         volume_mounts=[pvc_volume_mount],
         volumes=[pvc_volume],
+        service_account_name="airflow",
     )
 
     # Build and push image
@@ -208,6 +209,7 @@ def create_model_image_to_deploy_dag():
         # Set resource constraints
         container_resources=resources,
         affinity=node_affinity,
+        service_account_name="airflow",
     )
 
     # Registering the task - Define the task dependencies here
