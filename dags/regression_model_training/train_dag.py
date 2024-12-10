@@ -1,6 +1,7 @@
 """Model training Airflow DAG for Kubernetes."""
 
 from airflow.decorators import dag
+from airflow.hooks.base import BaseHook
 from airflow.models import Variable
 from airflow.operators.python import PythonOperator
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
@@ -15,8 +16,17 @@ mlflow_tracking_password = Variable.get("mlflow_tracking_password")
 namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_model_training")
 dvc_remote = Variable.get("dvc_remote")
-dvc_access_key_id = Variable.get("dvc_access_key_id")
-dvc_secret_access_key = Variable.get("dvc_secret_access_key")
+
+# Retrieve AWS connection details - this must be set already
+conn_id = Variable.get("aws_conn_name", default_var="aws_default")
+conn = BaseHook.get_connection(conn_id)
+
+# Extract connection details
+dvc_access_key_id = conn.login  # Access Key ID
+dvc_secret_access_key = conn.password  # Secret Access Key
+
+dvc_endpoint_url = Variable.get("dvc_endpoint_url")
+dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
 data_version = Variable.get("data_version")
 config_map = Variable.get("model_training_configmap")
 connection_id = Variable.get("connection_id")
@@ -50,8 +60,7 @@ if base_image_needs_auth:
 else:
     image_pull_secrets = None
 
-deploy_as_code = Variable.get(
-    "deploy_as_code", default_var="False")
+deploy_as_code = Variable.get("deploy_as_code", default_var="False")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
 
@@ -85,8 +94,10 @@ env_vars = [
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
     k8s.V1EnvVar(name="DVC_REMOTE", value=dvc_remote),
+    k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(name="DATA_VERSION", value=data_version),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
@@ -143,9 +154,11 @@ def model_training_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     preprocess_pod = KubernetesPodOperator(
@@ -159,9 +172,11 @@ def model_training_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     model_train_pod = KubernetesPodOperator(
@@ -175,10 +190,12 @@ def model_training_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
         do_xcom_push=True,
+        service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     extract_run_id_task = PythonOperator(
@@ -205,9 +222,11 @@ def model_training_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
+        startup_timeout_seconds=600,
     )
 
     # Registering the task - Define the task dependencies here

@@ -14,6 +14,7 @@ namespace = Variable.get("namespace")
 base_image = Variable.get("base_image_data_ingestion")
 dvc_remote = Variable.get("dvc_remote")
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
+dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
 
 # Retrieve AWS connection details - this must be set already
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
@@ -102,6 +103,7 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(
         name="GITHUB_USERNAME",
         value_from=k8s.V1EnvVarSource(
@@ -139,9 +141,10 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     data_clean_pod = KubernetesPodOperator(
@@ -158,9 +161,10 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     data_split_pod = KubernetesPodOperator(
@@ -177,9 +181,10 @@ def data_ingestion_dag():
         },
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     data_push_pod = KubernetesPodOperator(
@@ -196,6 +201,7 @@ def data_ingestion_dag():
         is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     # Registering the task - task dependencies

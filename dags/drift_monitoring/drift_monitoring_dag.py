@@ -1,6 +1,7 @@
 """Drift monitoring Airflow DAG for Kubernetes."""
 
 from airflow.decorators import dag
+from airflow.hooks.base import BaseHook
 from airflow.models import Variable
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
@@ -19,8 +20,16 @@ in_cluster = Variable.get("in_cluster", default_var="False").lower() in (
 )
 dvc_remote = Variable.get("dvc_remote")
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
-dvc_access_key_id = Variable.get("dvc_access_key_id")
-dvc_secret_access_key = Variable.get("dvc_secret_access_key")
+dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
+
+# Retrieve AWS connection details - this must be set already
+conn_id = Variable.get("aws_conn_name", default_var="aws_default")
+conn = BaseHook.get_connection(conn_id)
+
+# Extract connection details
+dvc_access_key_id = conn.login  # Access Key ID
+dvc_secret_access_key = conn.password  # Secret Access Key
+
 github_secret = Variable.get("github_secret", default_var="github-auth")
 github_secret_username_key = Variable.get(
     "github_secret_username_key", default_var="username"
@@ -85,6 +94,7 @@ env_vars = [
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
     k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
     k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(name="DATA_REPO", value=data_repo),
     k8s.V1EnvVar(
         name="HISTORICAL_DATA_VERSION", value=historical_data_version
@@ -127,9 +137,10 @@ def drift_monitoring_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     do_inference = KubernetesPodOperator(
@@ -143,9 +154,10 @@ def drift_monitoring_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     generate_drift_report = KubernetesPodOperator(
@@ -159,9 +171,10 @@ def drift_monitoring_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     push_drift_report = KubernetesPodOperator(
@@ -175,9 +188,10 @@ def drift_monitoring_dag():
         env_vars=env_vars,
         volumes=[pvc_volume, config_volume],
         volume_mounts=[pvc_volume_mount, config_volume_mount],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
+        service_account_name="airflow",
     )
 
     fetch_data >> do_inference >> generate_drift_report >> push_drift_report

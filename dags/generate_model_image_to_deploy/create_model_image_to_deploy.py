@@ -178,11 +178,12 @@ def create_model_image_to_deploy_dag():
         cmds=["poetry", "run", "python", "src/main.py"],
         image_pull_secrets=image_pull_secrets,
         env_vars=env_vars,
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
         volume_mounts=[pvc_volume_mount],
         volumes=[pvc_volume],
+        service_account_name="airflow",
     )
 
     # Build and push image
@@ -199,7 +200,7 @@ def create_model_image_to_deploy_dag():
             f"--destination={docker_registry}/"
             f"{mlflow_built_image_name}:{mlflow_built_image_tag}",
         ],
-        is_delete_operator_pod=True,
+        is_delete_operator_pod=False,
         get_logs=True,
         in_cluster=in_cluster,
         image_pull_secrets=image_pull_secrets,
@@ -208,6 +209,7 @@ def create_model_image_to_deploy_dag():
         # Set resource constraints
         container_resources=resources,
         affinity=node_affinity,
+        service_account_name="airflow",
     )
 
     # Registering the task - Define the task dependencies here
