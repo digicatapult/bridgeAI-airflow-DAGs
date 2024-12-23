@@ -27,7 +27,6 @@ dvc_secret_access_key = conn.password  # Secret Access Key
 
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
 dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
-data_version = Variable.get("data_version")
 config_map = Variable.get("model_training_configmap")
 connection_id = Variable.get("connection_id")
 log_level = Variable.get("log_level", default_var="INFO")
@@ -63,6 +62,11 @@ else:
 deploy_as_code = Variable.get("deploy_as_code", default_var="False")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
+
+if deploy_as_code:
+    data_version = "data-latest"
+else:
+    data_version = Variable.get("data_version", default_var="data-latest")
 
 # Define PVC
 pvc_volume = k8s.V1Volume(
