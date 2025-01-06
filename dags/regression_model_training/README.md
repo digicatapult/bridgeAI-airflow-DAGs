@@ -30,6 +30,8 @@
 | deploy_as_code              | `False`                                                  | If enabled, the model will be registered with the specified `deploy_model_name` and the alias `deploy_model_alias` will be added to it. If disabled, it has to be done manually using the MLFlow UI. |
 | deploy_model_name           | `house_price_prediction_prod`                            | The name with which the model will be registered. This name combined with alias will be used to deploy the model.                                                                                    |
 | deploy_model_alias          | `champion`                                               | The alias for the new model that got registered. This alias along with the registered name will be used to deploy the model.                                                                         |
+| deploy_as_code              | `False`                                                  | Whether to use deploy as code approach or deploy as model approach. With deploy as code, a manual trigger of the data ingestion DAG automatically launches the subsequent DAG for model training on the latest data. The newly trained model is then assumed to be superior and is deployed without further approval, unlike the deploy as model approach. |
+
 
 
 
