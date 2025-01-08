@@ -239,7 +239,7 @@ def model_training_dag():
     def decide_branch(**kwargs):
         deploy_as_code = kwargs.get("deploy_as_code", False)
         if deploy_as_code:
-            return "trigger_training"
+            return "trigger_deployment_build"
         else:
             return "end"
 
