@@ -211,7 +211,7 @@ def data_ingestion_dag():
     def decide_branch(**kwargs):
         deploy_as_code = kwargs.get("deploy_as_code", "False")
         if deploy_as_code.lower() in ("true", "1", "t"):
-            return "trigger_deployment_build"
+            return "trigger_training"
         else:
             return "end"
 
