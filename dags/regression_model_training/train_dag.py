@@ -3,6 +3,9 @@
 from airflow.decorators import dag
 from airflow.hooks.base import BaseHook
 from airflow.models import Variable
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
@@ -233,6 +236,27 @@ def model_training_dag():
         startup_timeout_seconds=600,
     )
 
+    def decide_branch(**kwargs):
+        deploy_as_code = kwargs.get("deploy_as_code", False)
+        if deploy_as_code:
+            return "trigger_training"
+        else:
+            return "end"
+
+    branch = BranchPythonOperator(
+        task_id="branch_task",
+        python_callable=decide_branch,
+        provide_context=True,
+        op_kwargs={"deploy_as_code": deploy_as_code},  # Pass the flag here
+    )
+
+    trigger_deployment_build = TriggerDagRunOperator(
+        task_id="trigger_deployment_build",
+        trigger_dag_id="create_model_image_to_deploy_dag",
+    )
+
+    end = EmptyOperator(task_id="end", trigger_rule="none_failed_or_skipped")
+
     # Registering the task - Define the task dependencies here
     (
         data_fetch_pod
@@ -240,7 +264,10 @@ def model_training_dag():
         >> model_train_pod
         >> extract_run_id_task
         >> evaluation_pod
+        >> branch
     )
+    branch >> trigger_deployment_build >> end
+    branch >> end
 
 
 # Instantiate the DAG

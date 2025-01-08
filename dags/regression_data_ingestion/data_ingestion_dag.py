@@ -209,28 +209,34 @@ def data_ingestion_dag():
     )
 
     def decide_branch(**kwargs):
-        deploy_as_code = kwargs.get('deploy_as_code', False)
+        deploy_as_code = kwargs.get("deploy_as_code", False)
         if deploy_as_code:
-            return 'trigger_training'
+            return "trigger_training"
         else:
-            return 'end'
+            return "end"
 
     branch = BranchPythonOperator(
-        task_id='branch_task',
+        task_id="branch_task",
         python_callable=decide_branch,
         provide_context=True,
-        op_kwargs={'deploy_as_code': deploy_as_code},  # Pass the flag here
+        op_kwargs={"deploy_as_code": deploy_as_code},  # Pass the flag here
     )
 
     trigger_training = TriggerDagRunOperator(
-        task_id='trigger_training',
-        trigger_dag_id='model_training_dag',
+        task_id="trigger_training",
+        trigger_dag_id="model_training_dag",
     )
 
-    end = EmptyOperator(task_id='end', trigger_rule='none_failed_or_skipped')
+    end = EmptyOperator(task_id="end", trigger_rule="none_failed_or_skipped")
 
     # Define dependencies
-    data_collect_pod >> data_clean_pod >> data_split_pod >> data_push_pod >> branch
+    (
+        data_collect_pod
+        >> data_clean_pod
+        >> data_split_pod
+        >> data_push_pod
+        >> branch
+    )
     branch >> trigger_training >> end
     branch >> end
 
