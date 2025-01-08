@@ -66,7 +66,7 @@ deploy_as_code = Variable.get("deploy_as_code", default_var="False")
 deploy_model_name = Variable.get("deploy_model_name")
 deploy_model_alias = Variable.get("deploy_model_alias")
 
-if deploy_as_code:
+if deploy_as_code.lower() in ("true", "1", "t"):
     data_version = "data-latest"
 else:
     data_version = Variable.get("data_version", default_var="data-latest")
@@ -237,8 +237,8 @@ def model_training_dag():
     )
 
     def decide_branch(**kwargs):
-        deploy_as_code = kwargs.get("deploy_as_code", False)
-        if deploy_as_code:
+        deploy_as_code = kwargs.get("deploy_as_code", "False")
+        if deploy_as_code.lower() in ("true", "1", "t"):
             return "trigger_deployment_build"
         else:
             return "end"
