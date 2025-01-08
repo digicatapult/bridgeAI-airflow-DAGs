@@ -3,6 +3,9 @@
 from airflow.decorators import dag
 from airflow.hooks.base import BaseHook
 from airflow.models import Variable
+from airflow.operators.empty import EmptyOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.operators.python import BranchPythonOperator
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import (
     KubernetesPodOperator,
 )
@@ -15,6 +18,7 @@ base_image = Variable.get("base_image_data_ingestion")
 dvc_remote = Variable.get("dvc_remote")
 dvc_endpoint_url = Variable.get("dvc_endpoint_url")
 dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
+deploy_as_code = Variable.get("deploy_as_code", default_var="False")
 
 # Retrieve AWS connection details - this must be set already
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
@@ -204,8 +208,31 @@ def data_ingestion_dag():
         service_account_name="airflow",
     )
 
-    # Registering the task - task dependencies
-    data_collect_pod >> data_clean_pod >> data_split_pod >> data_push_pod
+    def decide_branch(**kwargs):
+        deploy_as_code = kwargs.get('deploy_as_code', False)
+        if deploy_as_code:
+            return 'trigger_training'
+        else:
+            return 'end'
+
+    branch = BranchPythonOperator(
+        task_id='branch_task',
+        python_callable=decide_branch,
+        provide_context=True,
+        op_kwargs={'deploy_as_code': deploy_as_code},  # Pass the flag here
+    )
+
+    trigger_training = TriggerDagRunOperator(
+        task_id='trigger_training',
+        trigger_dag_id='model_training_dag',
+    )
+
+    end = EmptyOperator(task_id='end', trigger_rule='none_failed_or_skipped')
+
+    # Define dependencies
+    data_collect_pod >> data_clean_pod >> data_split_pod >> data_push_pod >> branch
+    branch >> trigger_training >> end
+    branch >> end
 
 
 # Instantiate the DAG
