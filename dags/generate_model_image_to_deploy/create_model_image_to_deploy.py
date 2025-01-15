@@ -11,6 +11,7 @@ from kubernetes.client import (
     V1NodeSelector,
     V1NodeSelectorRequirement,
     V1NodeSelectorTerm,
+    V1Toleration,
 )
 from kubernetes.client import models as k8s
 
@@ -57,6 +58,9 @@ enable_node_selection = Variable.get(
     "t",
 )
 
+# -----------------------------
+# Resource constraints (optional)
+# -----------------------------
 if enable_resource_constraints:
     # Retrieve Airflow variables for resources
     request_memory = Variable.get(
@@ -98,6 +102,9 @@ if base_image_needs_auth:
 else:
     image_pull_secrets = None
 
+# -----------------------------
+# Environment variables
+# -----------------------------
 env_vars = [
     k8s.V1EnvVar(name="MLFLOW_TRACKING_URI", value=mlflow_tracking_uri),
     k8s.V1EnvVar(
@@ -123,13 +130,11 @@ pvc_volume = k8s.V1Volume(
     ),
 )
 
-# Mount PVC
 pvc_volume_mount = k8s.V1VolumeMount(
     name="docker-context-volume",
     mount_path="/app/mlflow-dockerfile",
 )
 
-# Secret for container registry authentication
 secret_volume = k8s.V1Volume(
     name="docker-push-secret-volume",
     secret=k8s.V1SecretVolumeSource(
@@ -141,6 +146,9 @@ secret_volume_mount = k8s.V1VolumeMount(
     name="docker-push-secret-volume", mount_path="/kaniko/.docker/"
 )
 
+# -----------------------------
+# Node Affinity and Tolerations
+# -----------------------------
 if enable_node_selection:
     node_label = Variable.get("docker_build_pod_node_label", "t3.2xlarge")
     # Define node affinity
@@ -161,14 +169,23 @@ if enable_node_selection:
             )
         )
     )
+
+    # Example toleration if the node is tainted like: dedicated=single:NoSchedule
+    tolerations = [
+        V1Toleration(
+            key="dedicated",
+            operator="Equal",
+            value="single",
+            effect="NoSchedule"
+        )
+    ]
 else:
     node_affinity = None
-
+    tolerations = []
 
 @dag(schedule=None, catchup=False)
 def create_model_image_to_deploy_dag():
     """Model deployment dag."""
-    # KubernetesPodOperator to generate Dockerfile
     generate_dockerfile = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
@@ -184,9 +201,11 @@ def create_model_image_to_deploy_dag():
         volume_mounts=[pvc_volume_mount],
         volumes=[pvc_volume],
         service_account_name="airflow",
+        # Optional: set affinity & tolerations if you want this step pinned, too
+        affinity=node_affinity,
+        tolerations=tolerations,
     )
 
-    # Build and push image
     build_and_push = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
@@ -206,13 +225,12 @@ def create_model_image_to_deploy_dag():
         image_pull_secrets=image_pull_secrets,
         volume_mounts=[pvc_volume_mount, secret_volume_mount],
         volumes=[pvc_volume, secret_volume],
-        # Set resource constraints
         container_resources=resources,
         affinity=node_affinity,
+        tolerations=tolerations,
         service_account_name="airflow",
     )
 
-    # Registering the task - Define the task dependencies here
     generate_dockerfile >> build_and_push
 
 
