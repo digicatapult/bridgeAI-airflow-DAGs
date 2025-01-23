@@ -143,23 +143,6 @@ def drift_monitoring_dag():
         service_account_name="airflow",
     )
 
-    # do_inference = KubernetesPodOperator(
-    #     kubernetes_conn_id=connection_id,
-    #     namespace=namespace,
-    #     image=base_image,
-    #     task_id="perform_inference_on_datasets",
-    #     name="perform-inference-on-datasets",
-    #     cmds=["poetry", "run", "python", "src/inference.py"],
-    #     image_pull_secrets=image_pull_secrets,
-    #     env_vars=env_vars,
-    #     volumes=[pvc_volume, config_volume],
-    #     volume_mounts=[pvc_volume_mount, config_volume_mount],
-    #     is_delete_operator_pod=False,
-    #     get_logs=True,
-    #     in_cluster=in_cluster,
-    #     service_account_name="airflow",
-    # )
-
     generate_drift_report = KubernetesPodOperator(
         kubernetes_conn_id=connection_id,
         namespace=namespace,
@@ -194,7 +177,6 @@ def drift_monitoring_dag():
         service_account_name="airflow",
     )
 
-    # fetch_data >> do_inference >> generate_drift_report >> push_drift_report
     fetch_data >> generate_drift_report >> push_drift_report
 
 
