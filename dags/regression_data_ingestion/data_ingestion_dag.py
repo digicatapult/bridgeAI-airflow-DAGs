@@ -25,8 +25,9 @@ conn_id = Variable.get("aws_conn_name", default_var="aws_default")
 conn = BaseHook.get_connection(conn_id)
 
 # Extract connection details
-dvc_access_key_id = conn.login  # Access Key ID
-dvc_secret_access_key = conn.password  # Secret Access Key
+if (conn.login and conn.password) is not None:
+    dvc_access_key_id = conn.login  # Access Key ID
+    dvc_secret_access_key = conn.password  # Secret Access Key
 
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
