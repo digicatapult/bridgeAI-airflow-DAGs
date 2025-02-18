@@ -24,10 +24,16 @@ deploy_as_code = Variable.get("deploy_as_code", default_var="False")
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
 conn = BaseHook.get_connection(conn_id)
 
+env_vars = []
+
 # Extract connection details
 if (conn.login and conn.password) != "":
     dvc_access_key_id = conn.login  # Access Key ID
     dvc_secret_access_key = conn.password  # Secret Access Key
+    env_vars = [*env_vars, *[
+        k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
+        k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    ]]
 
 config_map = Variable.get("data_ingestion_configmap")
 connection_id = Variable.get("connection_id")
@@ -101,7 +107,7 @@ else:
     image_pull_secrets = None
 
 # Define the environment variables
-env_vars = [
+env_vars = [*env_vars, *[
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
     k8s.V1EnvVar(name="DVC_REMOTE", value=dvc_remote),
@@ -123,7 +129,7 @@ env_vars = [
             )
         ),
     ),
-]
+]]
 
 if (conn.login and conn.password) != "":
     env_vars = [*env_vars, *[
