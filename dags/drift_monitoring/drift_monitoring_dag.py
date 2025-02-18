@@ -26,9 +26,16 @@ dvc_remote_region = Variable.get("dvc_remote_region", default_var="eu-west-2")
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
 conn = BaseHook.get_connection(conn_id)
 
+env_vars = []
+
 # Extract connection details
-dvc_access_key_id = conn.login  # Access Key ID
-dvc_secret_access_key = conn.password  # Secret Access Key
+if (conn.login and conn.password) != "":
+    dvc_access_key_id = conn.login  # Access Key ID
+    dvc_secret_access_key = conn.password  # Secret Access Key
+    env_vars = [*env_vars, *[
+        k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
+        k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
+    ]]
 
 github_secret = Variable.get("github_secret", default_var="github-auth")
 github_secret_username_key = Variable.get(
@@ -87,13 +94,11 @@ config_volume_mount = k8s.V1VolumeMount(
     read_only=True,
 )
 
-env_vars = [
+env_vars = [*env_vars, *[
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
     k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
     k8s.V1EnvVar(name="DVC_REMOTE", value=dvc_remote),
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
-    k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
-    k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
     k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(name="DATA_REPO", value=data_repo),
     k8s.V1EnvVar(
@@ -119,7 +124,7 @@ env_vars = [
         ),
     ),
     k8s.V1EnvVar(name="CONFIG_PATH", value="/config/config.yaml"),
-]
+]]
 
 
 @dag(schedule=None, catchup=False)
