@@ -131,12 +131,6 @@ env_vars = [*env_vars, *[
     ),
 ]]
 
-if (conn.login and conn.password) != "":
-    env_vars = [*env_vars, *[
-        k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
-        k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key)]
-    ]
-
 
 @dag(schedule=None, catchup=False)
 def data_ingestion_dag():
