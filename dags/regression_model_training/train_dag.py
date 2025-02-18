@@ -24,8 +24,9 @@ dvc_remote = Variable.get("dvc_remote")
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
 conn = BaseHook.get_connection(conn_id)
 
+print(conn)
 # Extract connection details
-if (conn.login and conn.password) is not None:
+if (conn.login and conn.password) != "":
     dvc_access_key_id = conn.login  # Access Key ID
     dvc_secret_access_key = conn.password  # Secret Access Key
 
@@ -103,8 +104,6 @@ env_vars = [
     k8s.V1EnvVar(name="LOG_LEVEL", value=log_level),
     k8s.V1EnvVar(name="DVC_REMOTE", value=dvc_remote),
     k8s.V1EnvVar(name="DVC_ENDPOINT_URL", value=dvc_endpoint_url),
-    k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
-    k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key),
     k8s.V1EnvVar(name="AWS_DEFAULT_REGION", value=dvc_remote_region),
     k8s.V1EnvVar(name="DATA_VERSION", value=data_version),
     k8s.V1EnvVar(
@@ -135,6 +134,12 @@ env_vars = [
     k8s.V1EnvVar(name="DEPLOY_MODEL_NAME", value=deploy_model_name),
     k8s.V1EnvVar(name="DEPLOY_MODEL_ALIAS", value=deploy_model_alias),
 ]
+
+if (conn.login and conn.password) != "":
+    env_vars = [*env_vars, *[
+        k8s.V1EnvVar(name="DVC_ACCESS_KEY_ID", value=dvc_access_key_id),
+        k8s.V1EnvVar(name="DVC_SECRET_ACCESS_KEY", value=dvc_secret_access_key)]
+    ]
 
 
 def extract_run_id(**kwargs):
