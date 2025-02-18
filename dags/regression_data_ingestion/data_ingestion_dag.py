@@ -24,7 +24,6 @@ deploy_as_code = Variable.get("deploy_as_code", default_var="False")
 conn_id = Variable.get("aws_conn_name", default_var="aws_default")
 conn = BaseHook.get_connection(conn_id)
 
-print(conn)
 # Extract connection details
 if (conn.login and conn.password) != "":
     dvc_access_key_id = conn.login  # Access Key ID
